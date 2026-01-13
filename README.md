@@ -13,23 +13,36 @@ Build a bookmark management application where users can organize bookmarks into 
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm (v8+)
+
+If you don't have pnpm installed:
+```bash
+npm install -g pnpm
+```
+
+### Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="file:./dev.db"
+```
 
 ### Installation
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Generate Prisma client from ZenStack schema
-npm run db:generate
+pnpm db:generate
 
 # Create the database and seed test users
-npm run db:push
-npm run db:seed
+pnpm db:push
+pnpm db:seed
 
 # Start the development server
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and log in as one of the test users.
@@ -38,27 +51,32 @@ Open [http://localhost:3000](http://localhost:3000) and log in as one of the tes
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run db:generate` | Generate Prisma client from ZenStack schema |
-| `npm run db:push` | Push schema changes to database |
-| `npm run db:seed` | Seed database with test users |
-| `npm run db:reset` | Reset database and re-seed |
-| `npm run test` | Run tests with Vitest |
+| `pnpm dev` | Start development server |
+| `pnpm db:generate` | Generate Prisma client from ZenStack schema |
+| `pnpm db:push` | Push schema changes to database |
+| `pnpm db:seed` | Seed database with test users |
+| `pnpm db:reset` | Reset database and re-seed |
+| `pnpm test` | Run tests with Vitest |
 
 ---
 
 ## Business Requirements
 
-### 1. Collections Management
+### 1. Collections Management (Full CRUD)
 
-- Create, edit, and delete bookmark collections
-- Each collection has a name, description, and share settings
+Users should be able to:
+- **Create** new collections with a name and optional description
+- **Read** a list of their collections and view individual collection details
+- **Update** collection name, description, and share settings
+- **Delete** collections (which also deletes all bookmarks within)
 
-### 2. Bookmarks Management
+### 2. Bookmarks Management (Full CRUD)
 
-- Add bookmarks to collections (title, URL, description, optional tags)
-- Edit and delete bookmarks within a collection
-- Bookmarks belong to exactly one collection
+Within each collection, users should be able to:
+- **Create** bookmarks with a title, URL, and optional description
+- **Read** all bookmarks in a collection
+- **Update** bookmark details (title, URL, description)
+- **Delete** individual bookmarks
 
 ### 3. Share Controls (three modes)
 
@@ -68,15 +86,34 @@ Open [http://localhost:3000](http://localhost:3000) and log in as one of the tes
 | `LINK_ACCESS` | Anyone with the URL can view (read-only) |
 | `PASSWORD_PROTECTED` | Requires a password to view |
 
+**Important Access Behavior:**
+- When a collection is changed from `LINK_ACCESS` or `PASSWORD_PROTECTED` back to `PRIVATE`, all users except the owner immediately lose access
+- There is no "grandfathering" of prior access — changing to `PRIVATE` revokes all external access
+
 ### 4. Public View
 
 - Shareable URL for non-private collections (`/share/[slug]`)
-- Password gate for protected collections
+- Password gate for protected collections (password only needs to be entered once per session)
 - Read-only view of collection and its bookmarks
 
 ---
 
 ## Technical Requirements
+
+> **⚠️ Important: This project uses ZenStack v2**
+> 
+> This starter is configured with **ZenStack v2.x** (not v3). Please ensure you reference the v2 documentation when implementing access policies and schema features.
+>
+> **Helpful ZenStack v2 Documentation:**
+> - [ZModel Language Reference](https://zenstack.dev/docs/reference/zmodel-language)
+> - [Access Policies](https://zenstack.dev/docs/the-complete-guide/part1/access-policy/)
+> - [Server-Side Usage (Next.js)](https://zenstack.dev/docs/guides/nextjs)
+> - [Field-Level Access Control](https://zenstack.dev/docs/the-complete-guide/part1/access-policy/field-level)
+> - [@omit Attribute](https://zenstack.dev/docs/reference/zmodel-language#field-level-attributes) (for hiding sensitive fields like passwords)
+
+> **📁 Schema File Location**
+> 
+> Only modify `src/db/schema.zmodel` — this is the ZenStack schema file. **Do not edit** the generated Prisma files in `src/db/prisma/`. When you run `pnpm db:generate`, ZenStack automatically generates the Prisma schema from your `.zmodel` file.
 
 ### 1. ZenStack Schema (`src/db/schema.zmodel`)
 
@@ -92,7 +129,6 @@ Collection:
 
 Bookmark:
 - id, title, url, description
-- tags (see note below)
 - collection relation
 - timestamps
 
@@ -102,10 +138,23 @@ Access Policies:
 - Bookmarks: inherit access from parent collection
 ```
 
-**Note on Tags:** SQLite doesn't support arrays. Options:
-- Store as JSON string and parse in code
-- Create a separate `Tag` model with many-to-many relation
-- Skip tags (they're optional)
+#### Handling Passwords in ZenStack
+
+For the `sharePassword` field on collections, ZenStack provides two important attributes:
+
+**`@password`** — Automatically hashes the field value using bcryptjs before storing:
+```zmodel
+sharePassword String? @password
+```
+
+**`@omit`** — Ensures the field is never returned in query results from the enhanced client:
+```zmodel
+sharePassword String? @password @omit
+```
+
+> **⚠️ Important:** Always use both `@password` and `@omit` together for password fields. The `@omit` attribute prevents the hashed password from being exposed to the client, even accidentally.
+>
+> 📖 [ZenStack Password & Omit Documentation](https://zenstack.dev/docs/2.x/the-complete-guide/part1/other-enhancements)
 
 ### 2. Server Actions
 
@@ -126,7 +175,6 @@ Requirements:
 - Use Zod for input validation
 - Use `getEnhancedPrisma()` for database operations
 - Hash passwords with bcryptjs before storing
-- Use `revalidatePath()` after mutations
 
 ### 3. Pages
 
@@ -146,6 +194,7 @@ describe('Collection Share Access', () => {
   it('PRIVATE collection is not accessible to others');
   it('LINK_ACCESS collection is readable by anyone');
   it('PASSWORD_PROTECTED requires correct password');
+  it('changing shareMode to PRIVATE revokes access from non-owners');
 });
 ```
 
@@ -153,17 +202,34 @@ describe('Collection Share Access', () => {
 
 ## What's Provided
 
+### Fully Implemented (do not modify)
+
 | File | Description |
 |------|-------------|
 | `src/db/schema.zmodel` | Base schema with User model and ShareMode enum |
 | `src/db/prisma.ts` | Prisma client singleton |
 | `src/db/prisma/seed.ts` | Seed script with test users |
 | `src/lib/auth.ts` | Mock authentication helpers |
-| `src/lib/db.ts` | ZenStack enhanced Prisma clients |
+| `src/lib/db.ts` | ZenStack enhanced Prisma client (`getEnhancedPrisma`) |
 | `src/app/layout.tsx` | Root layout with Toaster |
 | `src/app/(dashboard)/layout.tsx` | Auth-protected layout with navbar |
 | `src/app/page.tsx` | Login page with user picker |
-| `src/components/ui/*` | Shadcn UI components |
+| `src/components/ui/*` | Shadcn UI components (Card, Button, Dialog, Tabs, etc.) |
+
+### Scaffolded with TODOs (you implement)
+
+These files have structure and detailed comments to guide you:
+
+| File | What's There | What You Add |
+|------|--------------|--------------|
+| `src/lib/actions/collections.ts` | Function signatures, Zod schemas (commented), hints | Actual implementation logic |
+| `src/lib/actions/bookmarks.ts` | Function signatures, Zod schemas (commented), hints | Actual implementation logic |
+| `src/app/(dashboard)/collections/page.tsx` | Page layout, commented examples | Fetch collections, render list, create dialog |
+| `src/app/(dashboard)/collections/[id]/page.tsx` | Page layout, commented examples | Fetch collection, bookmarks CRUD, settings UI |
+| `src/app/share/[slug]/page.tsx` | Page layout, commented examples | Public view, password gate component |
+| `src/__tests__/share-access.test.ts` | Test structure, some implemented tests | Pass the tests, optionally add more |
+
+> **💡 Tip:** The scaffolded files contain commented code snippets showing the expected patterns. Uncomment and adapt them rather than starting from scratch.
 
 ---
 
@@ -182,7 +248,6 @@ describe('Collection Share Access', () => {
 - Optimistic UI updates for bookmark operations
 - URL validation on bookmark creation
 - Favicon fetching for bookmarks
-- Tags autocomplete from existing tags
 - Copy share link to clipboard functionality
 
 ---
@@ -199,13 +264,33 @@ describe('Collection Share Access', () => {
 
 ---
 
-## Deliverables
+## Submission
 
-- [ ] Completed ZenStack schema (`src/db/schema.zmodel`) with Collection and Bookmark models
-- [ ] Server actions for collections and bookmarks (`src/lib/actions/`)
-- [ ] Dashboard pages for managing collections/bookmarks
-- [ ] Public share page with access control
-- [ ] At least one passing Vitest test for share access logic
+### Requirements
+
+1. Push your completed code to your own GitHub repository
+2. Record a Loom (or similar) video walkthrough showing:
+   - Brief code overview of your implementation
+   - Demo of the working application
+3. Email your submission to **both**:
+   - rose@cashewresearch.com
+   - james@cashewresearch.com
+
+**Include in your email:**
+- Link to your GitHub repository
+- Link to your video walkthrough
+
+### Bonus Points
+
+- Deploy to Vercel (or equivalent free hosting) and include the live URL in your email
+
+### Completed Work Should Include
+
+- ZenStack schema (`src/db/schema.zmodel`) with Collection and Bookmark models
+- Server actions for collections and bookmarks (`src/lib/actions/`)
+- Dashboard pages for managing collections/bookmarks
+- Public share page with access control
+- At least one passing Vitest test for share access logic
 
 ---
 
@@ -215,7 +300,6 @@ If you make any notable design decisions, document them here:
 
 ```
 Example:
-- Chose to store tags as JSON string because...
 - Used optimistic updates for bookmarks because...
 - Implemented password verification with cookies because...
 ```
@@ -224,6 +308,6 @@ Example:
 
 ## Questions?
 
-If you have any questions about the requirements, please reach out to your interviewer.
+If you have any questions about the requirements, please reach out to rose@cashewresearch.com or james@cashewresearch.com.
 
 Good luck!

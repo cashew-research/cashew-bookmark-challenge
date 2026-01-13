@@ -17,10 +17,10 @@
 // - Return structured results: { success: true, data } or { success: false, error }
 // =============================================================================
 
-// import { revalidatePath } from "next/cache";
-// import { z } from "zod";
-// import { getEnhancedPrisma } from "@/lib/db";
-// import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { getEnhancedPrisma } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 // -----------------------------------------------------------------------------
 // Validation Schemas

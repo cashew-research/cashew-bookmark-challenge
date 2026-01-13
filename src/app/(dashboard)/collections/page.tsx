@@ -1,31 +1,25 @@
 // =============================================================================
 // Collections Page - CANDIDATE IMPLEMENTS
 // =============================================================================
-// This page should display all collections owned by the current user.
+// Display all collections owned by the current user. Allow creating new ones.
 //
 // Requirements:
-// - Fetch collections using the enhanced Prisma client (getEnhancedPrisma)
-// - Display collections in a grid or list layout
-// - Show collection name, description, and share status
-// - Include a "Create Collection" button that opens a dialog
-// - Each collection should link to its detail page (/collections/[id])
-//
-// Hints:
-// - Use the Card component for each collection
-// - Use the Dialog component for the create form
-// - Use server actions from @/lib/actions/collections
-// - Consider adding loading states and empty states
+// - Fetch collections with getEnhancedPrisma() (auto-filters to current user)
+// - Pass collections to CollectionsList component
 // =============================================================================
 
+import { CollectionsList } from "@/components/collections-list";
+import { CreateCollectionDialog } from "@/components/create-collection-dialog";
+// import { getEnhancedPrisma } from "@/lib/db";
+
 export default async function CollectionsPage() {
-  // TODO: Fetch collections using getEnhancedPrisma()
-  // const db = await getEnhancedPrisma();
-  // const collections = await db.collection.findMany({
-  //   orderBy: { updatedAt: 'desc' }
-  // });
+  // TODO: Fetch collections with getEnhancedPrisma()
+  // Include bookmark count: include: { _count: { select: { bookmarks: true } } }
+  const collections: never[] = []; // Replace with actual fetch
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Collections</h1>
@@ -33,18 +27,12 @@ export default async function CollectionsPage() {
             Organize your bookmarks into collections
           </p>
         </div>
-        {/* TODO: Add "Create Collection" button with Dialog */}
+
+        <CreateCollectionDialog />
       </div>
 
-      {/* TODO: Display collections grid */}
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
-          Implement the collections list here.
-        </p>
-        <p className="text-sm text-muted-foreground mt-2">
-          See the README for requirements.
-        </p>
-      </div>
+      {/* TODO: Replace empty array with fetched collections */}
+      <CollectionsList collections={collections} />
     </div>
   );
 }
