@@ -1,0 +1,95 @@
+// =============================================================================
+// ZenStack Schema - Bookmarks Challenge
+// =============================================================================
+// This schema uses ZenStack to define both the database models AND access policies.
+// ZenStack extends Prisma with @@allow and @@deny rules that enforce authorization
+// at the data layer.
+//
+// YOUR TASK: Extend this schema with Collection and Bookmark models.
+// See the README for requirements on share modes and access policies.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// PROVIDED: User Model
+// =============================================================================
+// This model is provided for you. Do not modify it.
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  // TODO: Add relation to collections once you create the Collection model
+  // collections Collection[]
+
+  // Access policy: Users are readable by anyone (for displaying owner info)
+  @@allow('read', true)
+}
+
+// =============================================================================
+// PROVIDED: ShareMode Enum
+// =============================================================================
+// Use this enum for your Collection model's shareMode field.
+
+enum ShareMode {
+  PRIVATE           // Only owner can view
+  LINK_ACCESS       // Anyone with the URL can view (read-only)
+  PASSWORD_PROTECTED // Requires password to view
+}
+
+// =============================================================================
+// TODO: Implement Collection Model
+// =============================================================================
+// Requirements:
+// - id: String primary key with cuid() default
+// - name: String (required)
+// - description: String (optional)
+// - slug: String (unique, for shareable URLs) - use cuid() default
+// - shareMode: ShareMode enum, default to PRIVATE
+// - sharePassword: String (optional) - use @omit to never expose to client
+// - owner relation to User
+// - bookmarks relation to Bookmark[]
+// - createdAt/updatedAt timestamps
+//
+// Access Policies:
+// - create: Only authenticated users can create
+// - read: Owner can always read, others can read if shareMode != PRIVATE
+// - update/delete: Only owner can modify
+//
+// model Collection {
+//   // Your implementation here
+// }
+
+// =============================================================================
+// TODO: Implement Bookmark Model
+// =============================================================================
+// Requirements:
+// - id: String primary key with cuid() default
+// - title: String (required)
+// - url: String (required)
+// - description: String (optional)
+// - tags: String[] (optional, default empty array) - Note: SQLite doesn't support
+//   arrays natively, so you may need to store as JSON string or use a separate Tag model
+// - collection relation to Collection (with cascade delete)
+// - createdAt/updatedAt timestamps
+//
+// Access Policies:
+// - Inherit from parent collection:
+//   - create: Only collection owner can add bookmarks
+//   - read: Same as collection read policy
+//   - update/delete: Only collection owner can modify
+//
+// model Bookmark {
+//   // Your implementation here
+// }
