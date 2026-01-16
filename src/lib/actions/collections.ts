@@ -110,21 +110,31 @@ export async function deleteCollection(id: string) {
 /**
  * Verify a share password for a password-protected collection.
  *
+ * ⚠️ CODE REVIEW CHALLENGE: This implementation has security issues.
+ * Identify and fix them as part of your submission.
+ *
  * @param slug - Collection slug
  * @param password - Password to verify
  * @returns Whether the password is correct
- *
- * TODO: Implement this function
- * - Fetch the collection by slug (use raw prisma, not enhanced, to access password)
- * - Compare the provided password with the hashed password using bcrypt
- * - Do NOT expose whether the collection exists (return same error for both)
- * - Consider setting a cookie to remember verification
  */
 export async function verifySharePassword(
   slug: string,
   password: string
 ): Promise<{ success: boolean; error?: string }> {
-  // TODO: Implement
-  console.log("verifySharePassword called with:", slug);
-  throw new Error("Not implemented");
+  const db = await getEnhancedPrisma();
+
+  const collection = await db.collection.findUnique({
+    where: { slug },
+    select: { sharePassword: true, shareMode: true },
+  });
+
+  if (!collection) {
+    return { success: false, error: "Collection not found" };
+  }
+
+  if (password === collection.sharePassword) {
+    return { success: true };
+  }
+
+  return { success: false, error: "Incorrect password" };
 }

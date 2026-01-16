@@ -4,6 +4,9 @@
 
 **Time Estimate:** 2-3 hours
 
+> **Note**: If you're new to ZenStack, budget an extra 30 minutes to review the documentation links provided.
+> The access policy syntax may take some time to understand if you haven't used it before.
+
 Build a bookmark management application where users can organize bookmarks into collections and share those collections with configurable access controls.
 
 ---
@@ -27,6 +30,10 @@ Create a `.env` file in the root directory:
 ```env
 DATABASE_URL="file:./dev.db"
 ```
+
+> **Note**: The `DATABASE_URL` path is relative to the Prisma schema at `src/db/prisma/schema.prisma`.
+> If you have `DATABASE_URL` set in your shell environment (common for developers), it will override the `.env` file.
+> Run `unset DATABASE_URL` before running the setup commands if you encounter database path errors.
 
 ### Installation
 
@@ -198,6 +205,30 @@ describe('Collection Share Access', () => {
 });
 ```
 
+> **Expected Behavior**: The tests will fail initially because the `Collection` and `Bookmark` models don't exist yet.
+> After implementing the schema correctly, all 10 implemented tests should pass (7 are TODO placeholders).
+
+#### Custom Test Requirement
+
+In addition to passing the provided tests, write **one additional test case** for the following scenario:
+
+> "Verify that when a collection is deleted, all of its bookmarks are also deleted (cascade delete)."
+
+This tests your understanding of the data model and your ability to write meaningful tests.
+
+---
+
+## Code Review Challenge
+
+The `verifySharePassword` function in `src/lib/actions/collections.ts` contains a **partial implementation with security issues**.
+
+As part of this challenge:
+1. Identify the security and correctness issues in this function
+2. Fix the implementation
+3. Document the issues you found in the Design Decisions section below
+
+**Hint**: There are at least 3 significant issues with this code.
+
 ---
 
 ## What's Provided
@@ -237,11 +268,13 @@ These files have structure and detailed comments to guide you:
 
 | Category | Weight | Criteria |
 |----------|--------|----------|
-| **ZenStack Schema Design** | 20% | Proper relationships, access policies cover all cases, password field is `@omit`, appropriate defaults |
-| **Server Actions** | 25% | Type safety with Zod validation, proper error handling, uses enhanced client correctly, handles edge cases |
-| **React Components** | 25% | Clean composition, loading/error states, form handling, responsive design |
-| **Share Access Logic** | 20% | Password verification is secure (hashed), public view respects access mode, no data leaks |
-| **Code Quality** | 10% | TypeScript strictness, naming conventions, no `any` types, clean structure |
+| **ZenStack Schema Design** | 20% | Proper relationships, access policies, password handling |
+| **Server Actions** | 20% | Type safety, error handling, enhanced client usage |
+| **React Components** | 20% | Clean composition, loading/error states, form handling |
+| **Share Access Logic** | 15% | Secure password verification, access mode enforcement |
+| **Code Review** | 10% | Identified and fixed issues in `verifySharePassword` |
+| **Testing** | 10% | Passing tests + custom cascade delete test |
+| **Code Quality** | 5% | TypeScript strictness, naming, structure |
 
 ### Bonus Points (not required)
 
@@ -249,6 +282,19 @@ These files have structure and detailed comments to guide you:
 - URL validation on bookmark creation
 - Favicon fetching for bookmarks
 - Copy share link to clipboard functionality
+
+### UI/UX Polish (Encouraged)
+
+While the scaffolded components are functional, we encourage you to improve the overall look and feel of the application where possible:
+
+- Add meaningful loading states and skeleton loaders
+- Improve empty states with helpful messaging and calls-to-action
+- Add subtle animations for better user feedback
+- Ensure responsive design works well on mobile
+- Consider accessibility (keyboard navigation, focus states, ARIA labels)
+- Add visual hierarchy with typography and spacing
+
+This is not required, but candidates who demonstrate attention to user experience will stand out.
 
 ---
 
@@ -261,6 +307,17 @@ These files have structure and detailed comments to guide you:
 | Dashboard UI | 45 min | Collections list, detail page, bookmark management |
 | Share Feature | 30 min | Public page, password gate, access logic |
 | Testing & Polish | 30 min | Write tests, fix edge cases, cleanup |
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Error validating datasource: URL must start with protocol file:" | Your shell has `DATABASE_URL` set. Run `unset DATABASE_URL` and retry. |
+| Tests fail with "Cannot read properties of undefined" | Run `pnpm db:generate` after schema changes to regenerate the Prisma client. |
+| Changes not reflecting in the app | Restart the dev server after running `pnpm db:generate`. |
+| "cookies() is async" linter warning | In Next.js 15+, `cookies()` returns a Promise. Use `await cookies()`. |
 
 ---
 
