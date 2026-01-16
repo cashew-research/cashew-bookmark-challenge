@@ -105,11 +105,11 @@ Within each collection, users should be able to:
 > This starter is configured with **ZenStack v2.x** (not v3). Please ensure you reference the v2 documentation when implementing access policies and schema features.
 >
 > **Helpful ZenStack v2 Documentation:**
-> - [ZModel Language Reference](https://zenstack.dev/docs/reference/zmodel-language)
-> - [Access Policies](https://zenstack.dev/docs/the-complete-guide/part1/access-policy/)
-> - [Server-Side Usage (Next.js)](https://zenstack.dev/docs/guides/nextjs)
-> - [Field-Level Access Control](https://zenstack.dev/docs/the-complete-guide/part1/access-policy/field-level)
-> - [@omit Attribute](https://zenstack.dev/docs/reference/zmodel-language#field-level-attributes) (for hiding sensitive fields like passwords)
+> - [ZModel Language Reference](https://zenstack.dev/docs/2.x/reference/zmodel-language)
+> - [Access Policies](https://zenstack.dev/docs/2.x/the-complete-guide/part1/access-policy)
+> - [Next.js App Router Quick Start](https://zenstack.dev/docs/2.x/quick-start/nextjs-app-router)
+> - [Field-Level Access Control](https://zenstack.dev/docs/2.x/the-complete-guide/part1/access-policy/field-level)
+> - [@omit Attribute](https://zenstack.dev/docs/2.x/reference/zmodel-language#omit) (for hiding sensitive fields like passwords)
 
 > **📁 Schema File Location**
 > 
@@ -268,21 +268,18 @@ These files have structure and detailed comments to guide you:
 
 ### Requirements
 
-1. Push your completed code to your own GitHub repository
-2. Record a Loom (or similar) video walkthrough showing:
-   - Brief code overview of your implementation
-   - Demo of the working application
-3. Email your submission to **both**:
-   - rose@cashewresearch.com
-   - james@cashewresearch.com
+1. **Pull Request** — Create a PR on your own fork of this repository with detailed, atomic commits that show your work progression
+2. **Demo Video** — Record a Loom video walking through your working application, demonstrating all features
+3. **Code Walkthrough Video** — Record a second Loom video explaining the important code you wrote and your implementation decisions
+
+Email your submission to **both**:
+- rose@cashewresearch.com
+- james@cashewresearch.com
 
 **Include in your email:**
-- Link to your GitHub repository
-- Link to your video walkthrough
-
-### Bonus Points
-
-- Deploy to Vercel (or equivalent free hosting) and include the live URL in your email
+- Link to your Pull Request
+- Link to your demo video
+- Link to your code walkthrough video
 
 ### Completed Work Should Include
 
