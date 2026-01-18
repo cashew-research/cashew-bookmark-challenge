@@ -27,16 +27,47 @@ interface SharePageProps {
 export default async function SharePage({ params }: SharePageProps) {
   const { slug } = await params;
 
+  const db = await getEnhancedPrisma();
+
+
+  const collection = await db.collection.findUnique({
+    where: { 
+      slug
+    },
+    include: {
+      bookmarks: true
+    }
+  });
+  console.log(collection)
+
+  if (!collection) {
+    notFound();
+  }
+
+
   // TODO: Fetch collection by slug with owner and bookmarks
   // If null (PRIVATE or not found) → notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  const bookmarks: never[] = collection.bookmarks // Replace with collection.bookmarks
 
   // TODO: Handle PASSWORD_PROTECTED
   // Check cookie: (await cookies()).get(`share-verified-${slug}`)?.value === 'true'
   // If not verified → return <PasswordGate slug={slug} collectionName={...} />
+  if (collection.shareMode === 'PASSWORD_PROTECTED') {
+    const cookieStore = await cookies();
+    const isVerified = cookieStore.get(`share-verified-${slug}`)?.value === 'true';
+
+    if (!isVerified) {
+      return (
+        <PasswordGate 
+          slug={slug} 
+          collectionName={collection.name} 
+        />
+      );
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background px-6">
       {/* Header */}
       <header className="border-b">
         <div className="container flex h-14 items-center">
@@ -48,6 +79,23 @@ export default async function SharePage({ params }: SharePageProps) {
       <main className="container py-6">
         <div className="space-y-6">
           {/* TODO: Display collection.name, collection.description, collection.owner.name */}
+          <div className="space-y-1"> 
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-3xl font-bold tracking-tight">
+                {collection.name}
+              </h1>
+              
+              {collection.description && (
+                <p className="text-lg text-muted-foreground">
+                  {collection.description}
+                </p>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Collection Owner: <span className="font-medium text-foreground">{collection.ownerId}</span>
+            </p>
+          </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Share Page</h1>
             <p className="text-muted-foreground">Slug: {slug}</p>

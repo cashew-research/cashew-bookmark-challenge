@@ -21,22 +21,29 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getEnhancedPrisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/db/prisma";
+
+
+type ActionResult<T = any> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
 
 // -----------------------------------------------------------------------------
 // Validation Schemas
 // -----------------------------------------------------------------------------
 
-// const createCollectionSchema = z.object({
-//   name: z.string().min(1, "Name is required").max(100),
-//   description: z.string().max(500).optional(),
-// });
+const createCollectionSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).optional(),
+});
 
-// const updateCollectionSchema = z.object({
-//   name: z.string().min(1).max(100).optional(),
-//   description: z.string().max(500).optional(),
-//   shareMode: z.enum(["PRIVATE", "LINK_ACCESS", "PASSWORD_PROTECTED"]).optional(),
-//   sharePassword: z.string().min(4).max(100).optional(),
-// });
+const updateCollectionSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  shareMode: z.enum(["PRIVATE", "LINK_ACCESS", "PASSWORD_PROTECTED"]).optional(),
+  sharePassword: z.string().min(4).max(100).optional(),
+});
 
 // -----------------------------------------------------------------------------
 // Server Actions
@@ -57,10 +64,23 @@ import bcrypt from "bcryptjs";
 export async function createCollection(data: {
   name: string;
   description?: string;
-}) {
-  // TODO: Implement
-  console.log("createCollection called with:", data);
-  throw new Error("Not implemented");
+}): Promise<ActionResult> {
+  try {
+    const parsed = createCollectionSchema.parse(data);
+    const db = await getEnhancedPrisma();
+
+    const collection = await db.collection.create({
+      data: {
+        name: parsed.name,
+        description: parsed.description,
+      },
+    });
+
+    revalidatePath("/collections");
+    return { success: true, data: collection };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to create collection" };
+  }
 }
 
 /**
@@ -84,10 +104,39 @@ export async function updateCollection(
     shareMode?: "PRIVATE" | "LINK_ACCESS" | "PASSWORD_PROTECTED";
     sharePassword?: string;
   }
-) {
-  // TODO: Implement
-  console.log("updateCollection called with:", id, data);
-  throw new Error("Not implemented");
+): Promise<ActionResult> {
+  try {
+    const parsed = updateCollectionSchema.parse(data);
+    const db = await getEnhancedPrisma();
+    const updateData = { ...parsed };
+
+    if (parsed.sharePassword) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.sharePassword = await bcrypt.hash(parsed.sharePassword, salt);
+    } else if (parsed.shareMode == "PASSWORD_PROTECTED") {
+      return {success: false, error: "Please provide password with length between 4 and 100"}
+    }
+
+    const updatedCollection = await db.collection.update({
+      where: { id },
+      data: updateData,
+    });
+
+    const collection = await db.collection.findUnique({
+      where: { id },
+      select: { sharePassword: true, shareMode: true },
+    });
+
+    console.log(collection)
+
+
+    revalidatePath("/collections");
+    revalidatePath(`/collections/${id}`);
+    
+    return { success: true, data: updatedCollection };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update collection" };
+  }
 }
 
 /**
@@ -101,10 +150,19 @@ export async function updateCollection(
  * - Bookmarks will be cascade deleted per schema
  * - Revalidate the collections page
  */
-export async function deleteCollection(id: string) {
-  // TODO: Implement
-  console.log("deleteCollection called with:", id);
-  throw new Error("Not implemented");
+export async function deleteCollection(id: string): Promise<ActionResult<null>> {
+   try {
+    const db = await getEnhancedPrisma();
+
+    await db.collection.delete({
+      where: { id },
+    });
+
+    revalidatePath("/collections");
+    return { success: true, data: null };
+  } catch (err: any) {
+    return { success: false, error: err.message ?? "Failed to delete collection" };
+  }
 }
 
 /**
@@ -121,20 +179,20 @@ export async function verifySharePassword(
   slug: string,
   password: string
 ): Promise<{ success: boolean; error?: string }> {
-  const db = await getEnhancedPrisma();
 
-  const collection = await db.collection.findUnique({
+  const collection = await prisma.collection.findUnique({
     where: { slug },
     select: { sharePassword: true, shareMode: true },
   });
 
-  if (!collection) {
-    return { success: false, error: "Collection not found" };
+  const isValid = await bcrypt.compare(
+    password,
+    collection?.sharePassword
+  );
+
+  if (!collection || !isValid) {
+    return {success: false, error: "Collection not found or password is incorrect"}
   }
 
-  if (password === collection.sharePassword) {
-    return { success: true };
-  }
-
-  return { success: false, error: "Incorrect password" };
+  return { success: true };
 }
