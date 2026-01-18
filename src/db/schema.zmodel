@@ -27,11 +27,11 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String
+  name      String  
   createdAt DateTime @default(now())
 
   // TODO: Add relation to collections once you create the Collection model
-  // collections Collection[]
+  collections Collection[]
 
   // Access policy: Users are readable by anyone (for displaying owner info)
   @@allow('read', true)
@@ -67,9 +67,24 @@ enum ShareMode {
 // - read: Owner can always read, others can read if shareMode != PRIVATE
 // - update/delete: Only owner can modify
 //
-// model Collection {
-//   // Your implementation here
-// }
+model Collection {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  slug            String    @unique @default(cuid())
+  shareMode       ShareMode @default(PRIVATE)
+  sharePassword   String?   @omit
+  ownerId         String   @default(auth().id)
+  owner           User     @relation(fields: [ownerId], references: [id])
+  bookmarks       Bookmark[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@allow('create', auth() != null)
+  @@allow('read', ownerId == auth().id || shareMode != PRIVATE)
+  @@allow('update', ownerId == auth().id)
+  @@allow('delete', ownerId == auth().id)
+}
 
 // =============================================================================
 // TODO: Implement Bookmark Model
@@ -90,6 +105,26 @@ enum ShareMode {
 //   - read: Same as collection read policy
 //   - update/delete: Only collection owner can modify
 //
-// model Bookmark {
-//   // Your implementation here
-// }
+model Bookmark {
+  id            String   @id @default(cuid())
+  title         String
+  url           String
+  description   String?
+  tags          String   @default("[]")
+  collectionId  String
+  collection    Collection @relation(
+    fields: [collectionId],
+    references: [id],
+    onDelete: Cascade
+  )
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@allow('create', collection.ownerId == auth().id)
+  @@allow('read', 
+    collection.ownerId == auth().id || 
+    collection.shareMode != PRIVATE
+  )
+  @@allow('update', collection.ownerId == auth().id)
+  @@allow('delete', collection.ownerId == auth().id)
+}
+

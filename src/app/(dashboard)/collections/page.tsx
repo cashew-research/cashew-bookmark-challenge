@@ -10,12 +10,19 @@
 
 import { CollectionsList } from "@/components/collections-list";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
-// import { getEnhancedPrisma } from "@/lib/db";
+import { getEnhancedPrisma } from "@/lib/db";
 
 export default async function CollectionsPage() {
   // TODO: Fetch collections with getEnhancedPrisma()
   // Include bookmark count: include: { _count: { select: { bookmarks: true } } }
-  const collections: never[] = []; // Replace with actual fetch
+  const db = await getEnhancedPrisma();
+  const collections = await db.collection.findMany({
+    include: {
+      _count: {
+        select: { bookmarks: true },
+      },
+    },
+  });
 
   return (
     <div className="space-y-6">

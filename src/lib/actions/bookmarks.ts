@@ -21,24 +21,28 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getEnhancedPrisma } from "@/lib/db";
 
+type ActionResult<T = any> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
 // -----------------------------------------------------------------------------
 // Validation Schemas
 // -----------------------------------------------------------------------------
 
-// const createBookmarkSchema = z.object({
-//   collectionId: z.string().cuid(),
-//   title: z.string().min(1, "Title is required").max(200),
-//   url: z.string().url("Invalid URL"),
-//   description: z.string().max(500).optional(),
-//   tags: z.array(z.string().max(50)).max(10).optional(),
-// });
+const createBookmarkSchema = z.object({
+  collectionId: z.string().cuid(),
+  title: z.string().min(1, "Title is required").max(200),
+  url: z.string().url("Invalid URL"),
+  description: z.string().max(500).optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+});
 
-// const updateBookmarkSchema = z.object({
-//   title: z.string().min(1).max(200).optional(),
-//   url: z.string().url().optional(),
-//   description: z.string().max(500).optional(),
-//   tags: z.array(z.string().max(50)).max(10).optional(),
-// });
+const updateBookmarkSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  url: z.string().url().optional(),
+  description: z.string().max(500).optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+});
 
 // -----------------------------------------------------------------------------
 // Server Actions
@@ -62,10 +66,32 @@ export async function createBookmark(data: {
   url: string;
   description?: string;
   tags?: string[];
-}) {
-  // TODO: Implement
-  console.log("createBookmark called with:", data);
-  throw new Error("Not implemented");
+}): Promise<ActionResult> {
+  try {
+    const parsed = createBookmarkSchema.parse(data);
+    const db = await getEnhancedPrisma();
+
+    const bookmark = await db.bookmark.create({
+      data: {
+        title: parsed.title,
+        url: parsed.url,
+        description: parsed.description,
+        tags: parsed.tags,
+        collection: {
+          connect: { id: parsed.collectionId },
+        },
+      },
+    });
+
+    revalidatePath(`/collections/${parsed.collectionId}`);
+    
+    return { success: true, data: bookmark };
+  } catch (error: any) {
+    return { 
+      success: false, 
+      error: error.message || "You do not have permission to add to this collection." 
+    };
+  }
 }
 
 /**
@@ -88,10 +114,25 @@ export async function updateBookmark(
     description?: string;
     tags?: string[];
   }
-) {
-  // TODO: Implement
-  console.log("updateBookmark called with:", id, data);
-  throw new Error("Not implemented");
+): Promise<ActionResult> {
+  try {
+    const parsed = updateBookmarkSchema.parse(data);
+    const db = await getEnhancedPrisma();
+
+    const updatedBookmark = await db.bookmark.update({
+      where: { id },
+      data: parsed,
+    });
+
+    revalidatePath(`/collections/${updatedBookmark.collectionId}`);
+    
+    return { success: true, data: updatedBookmark };
+  } catch (error: any) {
+    return { 
+      success: false, 
+      error: error.message || "Failed to update bookmark." 
+    };
+  }
 }
 
 /**
@@ -104,8 +145,21 @@ export async function updateBookmark(
  * - Use getEnhancedPrisma() to delete (will enforce collection ownership)
  * - Revalidate the collection detail page
  */
-export async function deleteBookmark(id: string) {
-  // TODO: Implement
-  console.log("deleteBookmark called with:", id);
-  throw new Error("Not implemented");
+export async function deleteBookmark(id: string): Promise<ActionResult<null>> {
+  try {
+    const db = await getEnhancedPrisma();
+
+    const bookmark = await db.bookmark.delete({
+      where: { id },
+    });
+
+    revalidatePath(`/collections/${bookmark.collectionId}`);
+    
+    return { success: true, data: null };
+  } catch (error: any) {
+    return { 
+      success: false, 
+      error: error.message || "Failed to delete bookmark." 
+    };
+  }
 }

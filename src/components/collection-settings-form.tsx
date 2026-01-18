@@ -46,6 +46,68 @@ interface CollectionSettingsFormProps {
 
 export function CollectionSettingsForm({ collection }: CollectionSettingsFormProps) {
   const [shareMode, setShareMode] = useState<ShareMode>(collection.shareMode);
+  
+  const [basicInfoError, setBasicInfoError] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [isUpdatingBasicInfo, setIsUpdatingBasicInfo] = useState(false);
+  const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleUpdateBasicInfo(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBasicInfoError(null);
+    setIsUpdatingBasicInfo(true);
+
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+
+    const result = await updateCollection(collection.id, {
+        name,
+        description,
+    });
+
+    if (!result.success) {
+      setBasicInfoError(result.error)
+    }
+
+    setIsUpdatingBasicInfo(false);
+  }
+
+  async function handleUpdateAccessPolicy(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAccessError(null);
+    setIsUpdatingAccess(true);
+
+    const formData = new FormData(event.currentTarget);
+    const sharePassword = formData.get("sharePassword") as string;
+
+    const result = await updateCollection(collection.id, {
+        shareMode, 
+        ...(shareMode === "PASSWORD_PROTECTED" && { sharePassword: sharePassword })
+    });
+
+    if (!result.success) {
+      setAccessError(result.error)
+    }
+
+    setIsUpdatingAccess(false)
+  }
+
+  async function handleDeleteCollection() {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const result = await deleteCollection(collection.id);
+
+    if (!result.success) {
+      setDeleteError(result.error)
+    }
+    setIsDeleting(false);
+  }
+
 
   const shareUrl = typeof window !== "undefined"
     ? `${window.location.origin}/share/${collection.slug}`
@@ -60,20 +122,22 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
           <CardDescription>Update your collection name and description.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form onSubmit={handleUpdateBasicInfo}  className="space-y-4">
+            {basicInfoError && <p className="text-sm font-medium text-red-500">{basicInfoError}</p>}
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue={collection.name} />
+              <Input id="name" name="name" defaultValue={collection.name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
+                name="description"
                 defaultValue={collection.description ?? ""}
                 placeholder="What's this collection about?"
               />
             </div>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isUpdatingBasicInfo}>{isUpdatingBasicInfo ? "Saving..." : "Save Changes"}</Button>
           </form>
         </CardContent>
       </Card>
@@ -85,36 +149,39 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
           <CardDescription>Control who can access this collection.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Share Mode</Label>
-            <ShareModeSelect value={shareMode} onChange={setShareMode} />
-          </div>
-
-          {/* TODO: Show password field when PASSWORD_PROTECTED */}
-          {shareMode === "PASSWORD_PROTECTED" && (
+          <form onSubmit={handleUpdateAccessPolicy}>
+            {accessError && <p className="text-sm font-medium text-red-500">{accessError}</p>}
             <div className="space-y-2">
-              <Label htmlFor="password">Share Password</Label>
-              <Input id="password" type="password" placeholder="Enter a password" />
-              <p className="text-xs text-muted-foreground">
-                Visitors will need this password to view the collection.
-              </p>
+              <Label>Share Mode</Label>
+              <ShareModeSelect value={shareMode} onChange={setShareMode} />
             </div>
-          )}
 
-          {/* TODO: Show shareable URL when not PRIVATE */}
-          {shareMode !== "PRIVATE" && (
-            <div className="space-y-2">
-              <Label>Shareable URL</Label>
-              <div className="flex gap-2">
-                <Input value={shareUrl} readOnly />
-                <Button type="button" variant="outline" size="icon">
-                  <Copy className="h-4 w-4" />
-                </Button>
+            {/* TODO: Show password field when PASSWORD_PROTECTED */}
+            {shareMode === "PASSWORD_PROTECTED" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Share Password</Label>
+                <Input id="password" type="password" name="sharePassword" placeholder="Enter a password" />
+                <p className="text-xs text-muted-foreground">
+                  Visitors will need this password to view the collection.
+                </p>
               </div>
-            </div>
-          )}
+            )}
 
-          <Button type="button">Update Share Settings</Button>
+            {/* TODO: Show shareable URL when not PRIVATE */}
+            {shareMode !== "PRIVATE" && (
+              <div className="space-y-2">
+                <Label>Shareable URL</Label>
+                <div className="flex gap-2">
+                  <Input value={shareUrl} readOnly />
+                  <Button type="button" variant="outline" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <Button type="submit" disabled={isUpdatingAccess}>{isUpdatingAccess ? "Updating..." : "Update Share Settings"}</Button>
+          </form>
         </CardContent>
       </Card>
 
@@ -127,12 +194,12 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {deleteError && <p className="text-sm font-medium text-red-500">{deleteError}</p>}
           <DeleteConfirmDialog
             title="Delete Collection"
             description={`Are you sure you want to delete "${collection.name}"? This will permanently delete the collection and all its bookmarks.`}
-            onConfirm={() => {
-              // TODO: Call deleteCollection(collection.id)
-            }}
+            onConfirm={handleDeleteCollection}
+            disabled={isDeleting}
           />
         </CardContent>
       </Card>
