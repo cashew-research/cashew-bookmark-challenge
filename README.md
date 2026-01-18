@@ -350,7 +350,7 @@ Email your submission to **both**:
 
 ## Design Decisions
 
-- Security Fixes in `verifySharePassword` documented in [src/lib/actions/collections.ts#L155](src/lib/actions/collections.ts)
+- Security Fixes in `verifySharePassword` documented [here](src/lib/actions/collections.ts#L155)
 - Used server actions with Zod validation for type-safe form handling
 - Leveraged ZenStack access policies to automatically enforce authorization at the data layer
 - Implemented cascade delete via Prisma schema (`onDelete: Cascade`) for bookmark cleanup
