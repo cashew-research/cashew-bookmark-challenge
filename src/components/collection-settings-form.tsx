@@ -65,7 +65,7 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
   const [copied, setCopied] = useState(false);
 
   // Delete state
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [, setIsDeleting] = useState(false);
 
   const shareUrl = typeof window !== "undefined"
     ? `${window.location.origin}/share/${collection.slug}`

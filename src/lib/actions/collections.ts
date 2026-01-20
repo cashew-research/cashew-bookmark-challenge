@@ -198,7 +198,7 @@ export async function deleteCollection(id: string) {
     revalidatePath("/collections");
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Failed to delete collection" };
   }
 }

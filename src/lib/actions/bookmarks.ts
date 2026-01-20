@@ -197,7 +197,7 @@ export async function deleteBookmark(id: string) {
     revalidatePath(`/collections/${bookmark.collectionId}`);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Failed to delete bookmark" };
   }
 }
