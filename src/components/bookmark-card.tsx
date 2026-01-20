@@ -110,7 +110,7 @@ export function BookmarkCard({
           </div>
 
           {!readonly && (onEdit || onDelete) && (
-            <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-1 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               {onEdit && (
                 <Button
                   variant="ghost"
