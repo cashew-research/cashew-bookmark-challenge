@@ -29,11 +29,35 @@ export default async function SharePage({ params }: SharePageProps) {
 
   // TODO: Fetch collection by slug with owner and bookmarks
   // If null (PRIVATE or not found) → notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  const db = await getEnhancedPrisma();
+  const collection = await db.collection.findUnique({
+    where: { slug },
+    include: {
+      bookmarks: {
+        orderBy: { createdAt: "desc" },
+      },
+      owner: {
+        select: { name: true },
+      },
+    },
+  });
+
+  // PRIVATE collections will return null due to access policy
+  if (!collection) {
+    notFound();
+  }
 
   // TODO: Handle PASSWORD_PROTECTED
   // Check cookie: (await cookies()).get(`share-verified-${slug}`)?.value === 'true'
   // If not verified → return <PasswordGate slug={slug} collectionName={...} />
+  if (collection.shareMode === "PASSWORD_PROTECTED") {
+    const cookieStore = await cookies();
+    const isVerified = cookieStore.get(`share-verified-${slug}`)?.value === "true";
+
+    if (!isVerified) {
+      return <PasswordGate slug={slug} collectionName={collection.name} />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,12 +73,17 @@ export default async function SharePage({ params }: SharePageProps) {
         <div className="space-y-6">
           {/* TODO: Display collection.name, collection.description, collection.owner.name */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Share Page</h1>
-            <p className="text-muted-foreground">Slug: {slug}</p>
+            <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
+            {collection.description && (
+              <p className="text-muted-foreground mt-1">{collection.description}</p>
+            )}
+            <p className="text-sm text-muted-foreground mt-2">
+              Shared by {collection.owner.name}
+            </p>
           </div>
 
           {/* TODO: Replace with collection.bookmarks */}
-          <BookmarksList bookmarks={bookmarks} readonly />
+          <BookmarksList bookmarks={collection.bookmarks} readonly />
         </div>
       </main>
     </div>
