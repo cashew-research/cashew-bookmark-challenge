@@ -73,8 +73,8 @@ export function BookmarkCard({
   return (
     <Card className="group transition-all duration-200 hover:shadow-md">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
             {/* Favicon */}
             <div className="flex-shrink-0 mt-0.5">
               {faviconUrl && !faviconError ? (
@@ -92,31 +92,32 @@ export function BookmarkCard({
             </div>
 
             <div className="space-y-1 min-w-0 flex-1">
-              <CardTitle className="text-base">
+              <CardTitle className="text-base break-words">
                 <a
                   href={bookmark.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline inline-flex items-center gap-1 text-foreground hover:text-primary transition-colors"
+                  className="hover:underline inline-flex items-center gap-1 text-foreground hover:text-primary transition-colors break-words"
                 >
-                  {bookmark.title}
+                  <span className="break-words">{bookmark.title}</span>
                   <ExternalLink className="h-3 w-3 flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </a>
               </CardTitle>
-              <CardDescription className="truncate">
+              <CardDescription className="truncate text-xs sm:text-sm">
                 {displayUrl}
               </CardDescription>
             </div>
           </div>
 
           {!readonly && (onEdit || onDelete) && (
-            <div className="flex gap-1 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-0.5 sm:gap-1 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               {onEdit && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                  className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-primary/10 hover:text-primary touch-manipulation"
                   onClick={() => onEdit(bookmark)}
+                  aria-label="Edit bookmark"
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -126,8 +127,9 @@ export function BookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                  className="h-9 w-9 sm:h-8 sm:w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 touch-manipulation"
                   onClick={() => onDelete(bookmark)}
+                  aria-label="Delete bookmark"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Delete</span>
