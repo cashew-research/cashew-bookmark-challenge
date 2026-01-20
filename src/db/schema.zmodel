@@ -31,7 +31,7 @@ model User {
   createdAt DateTime @default(now())
 
   // TODO: Add relation to collections once you create the Collection model
-  // collections Collection[]
+  collections Collection[]
 
   // Access policy: Users are readable by anyone (for displaying owner info)
   @@allow('read', true)
@@ -66,10 +66,28 @@ enum ShareMode {
 // - create: Only authenticated users can create
 // - read: Owner can always read, others can read if shareMode != PRIVATE
 // - update/delete: Only owner can modify
-//
-// model Collection {
-//   // Your implementation here
-// }
+
+model Collection {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  slug          String    @unique @default(cuid())
+  shareMode     ShareMode @default(PRIVATE)
+  sharePassword String?   @password @omit
+
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  bookmarks     Bookmark[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Access Policies
+  @@allow("create", auth() != null)
+  @@allow("read", owner == auth() || shareMode != PRIVATE)
+  @@allow("update,delete", owner == auth())
+}
 
 // =============================================================================
 // TODO: Implement Bookmark Model
@@ -89,7 +107,22 @@ enum ShareMode {
 //   - create: Only collection owner can add bookmarks
 //   - read: Same as collection read policy
 //   - update/delete: Only collection owner can modify
-//
-// model Bookmark {
-//   // Your implementation here
-// }
+
+model Bookmark {
+  id            String     @id @default(cuid())
+  title         String
+  url           String
+  description   String?
+  tags          String     @default("[]") // JSON string array (SQLite workaround)
+
+  collectionId  String
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Access Policies - inherit from parent collection
+  @@allow("create", collection.owner == auth())
+  @@allow("read", collection.owner == auth() || collection.shareMode != PRIVATE)
+  @@allow("update,delete", collection.owner == auth())
+}

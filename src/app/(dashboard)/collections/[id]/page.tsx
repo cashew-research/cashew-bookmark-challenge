@@ -1,5 +1,5 @@
 // =============================================================================
-// Collection Detail Page - CANDIDATE IMPLEMENTS
+// Collection Detail Page
 // =============================================================================
 // Display a single collection with its bookmarks and settings.
 //
@@ -28,18 +28,33 @@ export default async function CollectionDetailPage({
 }: CollectionDetailPageProps) {
   const { id } = await params;
 
-  // TODO: Fetch collection with bookmarks using getEnhancedPrisma()
-  // If not found, call notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  // Fetch collection with bookmarks, return 404 if not found
+  const db = await getEnhancedPrisma();
+  const collection = await db.collection.findUnique({
+    where: { id },
+    include: {
+      bookmarks: {
+        orderBy: { createdAt: "desc" },
+      },
+      owner: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
+  if (!collection) {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          {/* TODO: Display collection.name and collection.description */}
-          <h1 className="text-3xl font-bold tracking-tight">Collection Detail</h1>
-          <p className="text-muted-foreground">Collection ID: {id}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
+          {collection.description && (
+            <p className="text-muted-foreground">{collection.description}</p>
+          )}
         </div>
 
         <Link href="/collections" className="text-sm text-muted-foreground hover:underline">
@@ -58,19 +73,11 @@ export default async function CollectionDetailPage({
             <CreateBookmarkDialog collectionId={id} />
           </div>
 
-          {/* TODO: Replace with collection.bookmarks */}
-          <BookmarksList bookmarks={bookmarks} />
+          <BookmarksList bookmarks={collection.bookmarks} />
         </TabsContent>
 
         <TabsContent value="settings">
-          {/* TODO: Pass fetched collection to CollectionSettingsForm
-           * <CollectionSettingsForm collection={collection} />
-           */}
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="text-muted-foreground">
-              Pass the fetched collection to CollectionSettingsForm.
-            </p>
-          </div>
+          <CollectionSettingsForm collection={collection} />
         </TabsContent>
       </Tabs>
     </div>

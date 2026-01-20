@@ -1,5 +1,5 @@
 // =============================================================================
-// Public Share Page - CANDIDATE IMPLEMENTS
+// Public Share Page
 // =============================================================================
 // Display a shared collection to visitors (logged in or not).
 //
@@ -27,13 +27,34 @@ interface SharePageProps {
 export default async function SharePage({ params }: SharePageProps) {
   const { slug } = await params;
 
-  // TODO: Fetch collection by slug with owner and bookmarks
-  // If null (PRIVATE or not found) → notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  // Fetch collection by slug, return 404 if PRIVATE or not found
+  const db = await getEnhancedPrisma();
+  const collection = await db.collection.findUnique({
+    where: { slug },
+    include: {
+      bookmarks: {
+        orderBy: { createdAt: "desc" },
+      },
+      owner: {
+        select: { name: true },
+      },
+    },
+  });
 
-  // TODO: Handle PASSWORD_PROTECTED
-  // Check cookie: (await cookies()).get(`share-verified-${slug}`)?.value === 'true'
-  // If not verified → return <PasswordGate slug={slug} collectionName={...} />
+  // PRIVATE collections will return null due to access policy
+  if (!collection) {
+    notFound();
+  }
+
+  // Check if password-protected collection is verified via cookie
+  if (collection.shareMode === "PASSWORD_PROTECTED") {
+    const cookieStore = await cookies();
+    const isVerified = cookieStore.get(`share-verified-${slug}`)?.value === "true";
+
+    if (!isVerified) {
+      return <PasswordGate slug={slug} collectionName={collection.name} />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,14 +68,17 @@ export default async function SharePage({ params }: SharePageProps) {
       {/* Content */}
       <main className="container py-6">
         <div className="space-y-6">
-          {/* TODO: Display collection.name, collection.description, collection.owner.name */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Share Page</h1>
-            <p className="text-muted-foreground">Slug: {slug}</p>
+            <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
+            {collection.description && (
+              <p className="text-muted-foreground mt-1">{collection.description}</p>
+            )}
+            <p className="text-sm text-muted-foreground mt-2">
+              Shared by {collection.owner.name}
+            </p>
           </div>
 
-          {/* TODO: Replace with collection.bookmarks */}
-          <BookmarksList bookmarks={bookmarks} readonly />
+          <BookmarksList bookmarks={collection.bookmarks} readonly />
         </div>
       </main>
     </div>

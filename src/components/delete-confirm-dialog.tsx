@@ -30,6 +30,9 @@ interface DeleteConfirmDialogProps {
   description: string;
   onConfirm: () => void | Promise<void>;
   trigger?: React.ReactNode;
+  // Controlled mode props
+  open?: boolean;
+  onCancel?: () => void;
 }
 
 export function DeleteConfirmDialog({
@@ -37,7 +40,33 @@ export function DeleteConfirmDialog({
   description,
   onConfirm,
   trigger,
+  open,
+  onCancel,
 }: DeleteConfirmDialogProps) {
+  // Controlled mode (no trigger, dialog is managed externally)
+  if (open !== undefined) {
+    return (
+      <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel?.()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  // Uncontrolled mode (with trigger)
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>

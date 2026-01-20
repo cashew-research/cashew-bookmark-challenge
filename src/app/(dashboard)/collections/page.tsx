@@ -1,5 +1,5 @@
 // =============================================================================
-// Collections Page - CANDIDATE IMPLEMENTS
+// Collections Page
 // =============================================================================
 // Display all collections owned by the current user. Allow creating new ones.
 //
@@ -10,12 +10,32 @@
 
 import { CollectionsList } from "@/components/collections-list";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
-// import { getEnhancedPrisma } from "@/lib/db";
+import { getEnhancedPrisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function CollectionsPage() {
-  // TODO: Fetch collections with getEnhancedPrisma()
-  // Include bookmark count: include: { _count: { select: { bookmarks: true } } }
-  const collections: never[] = []; // Replace with actual fetch
+  // Get current user to filter owned collections only
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/");
+  }
+
+  // Fetch collections with bookmark count, filtered to only show owned collections
+  const db = await getEnhancedPrisma();
+  const collections = await db.collection.findMany({
+    where: {
+      ownerId: user.id,
+    },
+    include: {
+      _count: {
+        select: { bookmarks: true },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -31,7 +51,6 @@ export default async function CollectionsPage() {
         <CreateCollectionDialog />
       </div>
 
-      {/* TODO: Replace empty array with fetched collections */}
       <CollectionsList collections={collections} />
     </div>
   );
