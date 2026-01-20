@@ -1,13 +1,7 @@
 // =============================================================================
-// Create Bookmark Dialog - CANDIDATE IMPLEMENTS
+// Create Bookmark Dialog
 // =============================================================================
-// A dialog for adding new bookmarks to a collection. Wire up the form submission.
-//
-// TODO:
-// - Add state for form fields (or use form action)
-// - Call createBookmark action on submit with collectionId
-// - Handle loading/error states
-// - Close dialog on success
+// A dialog for adding new bookmarks to a collection.
 // =============================================================================
 
 "use client";

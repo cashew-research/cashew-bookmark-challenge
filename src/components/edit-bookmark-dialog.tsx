@@ -1,13 +1,7 @@
 // =============================================================================
-// Edit Bookmark Dialog - CANDIDATE IMPLEMENTS
+// Edit Bookmark Dialog
 // =============================================================================
-// A dialog for editing existing bookmarks. Wire up the form submission.
-//
-// TODO:
-// - Add state for form fields (or use form action)
-// - Call updateBookmark action on submit with bookmark id
-// - Handle loading/error states
-// - Close dialog on success
+// A dialog for editing existing bookmarks.
 // =============================================================================
 
 "use client";

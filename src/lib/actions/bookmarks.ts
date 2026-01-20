@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// Bookmark Server Actions - CANDIDATE IMPLEMENTS
+// Bookmark Server Actions
 // =============================================================================
 // These server actions handle CRUD operations for bookmarks.
 //
@@ -50,11 +50,7 @@ const updateBookmarkSchema = z.object({
  * @param data - Bookmark data (collectionId, title, url, description, tags)
  * @returns The created bookmark or an error
  *
- * TODO: Implement this function
- * - Validate input with Zod
- * - Use getEnhancedPrisma() to create the bookmark
- * - The enhanced client will enforce that user owns the collection
- * - Revalidate the collection detail page
+ * Creates a new bookmark in a collection.
  */
 export async function createBookmark(data: {
   collectionId: string;
@@ -99,10 +95,7 @@ export async function createBookmark(data: {
  * @param data - Fields to update (title, url, description, tags)
  * @returns The updated bookmark or an error
  *
- * TODO: Implement this function
- * - Validate input with Zod
- * - Use getEnhancedPrisma() to update (will enforce collection ownership)
- * - Revalidate the collection detail page
+ * Updates an existing bookmark.
  */
 export async function updateBookmark(
   id: string,
@@ -170,9 +163,7 @@ export async function updateBookmark(
  * @param id - Bookmark ID
  * @returns Success or error
  *
- * TODO: Implement this function
- * - Use getEnhancedPrisma() to delete (will enforce collection ownership)
- * - Revalidate the collection detail page
+ * Deletes a bookmark.
  */
 export async function deleteBookmark(id: string) {
   try {

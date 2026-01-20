@@ -1,7 +1,7 @@
 "use server";
 
 // =============================================================================
-// Collection Server Actions - CANDIDATE IMPLEMENTS
+// Collection Server Actions
 // =============================================================================
 // These server actions handle CRUD operations for collections.
 //
@@ -51,11 +51,7 @@ const updateCollectionSchema = z.object({
  * @param data - Collection data (name, description)
  * @returns The created collection or an error
  *
- * TODO: Implement this function
- * - Validate input with Zod
- * - Use getEnhancedPrisma() to create the collection
- * - The enhanced client will automatically set the ownerId
- * - Revalidate the collections page after creation
+ * Creates a new collection for the current user.
  */
 export async function createCollection(data: {
   name: string;
@@ -100,11 +96,7 @@ export async function createCollection(data: {
  * @param data - Fields to update (name, description, shareMode, sharePassword)
  * @returns The updated collection or an error
  *
- * TODO: Implement this function
- * - Validate input with Zod
- * - If sharePassword is provided, hash it with bcryptjs
- * - Use getEnhancedPrisma() to update (will enforce ownership)
- * - Revalidate the collection detail page
+ * Updates an existing collection.
  */
 export async function updateCollection(
   id: string,
@@ -193,10 +185,7 @@ export async function updateCollection(
  * @param id - Collection ID
  * @returns Success or error
  *
- * TODO: Implement this function
- * - Use getEnhancedPrisma() to delete (will enforce ownership)
- * - Bookmarks will be cascade deleted per schema
- * - Revalidate the collections page
+ * Deletes a collection and all its bookmarks (cascade delete).
  */
 export async function deleteCollection(id: string) {
   try {

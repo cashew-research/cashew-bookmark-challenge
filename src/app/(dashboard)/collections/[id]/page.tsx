@@ -1,5 +1,5 @@
 // =============================================================================
-// Collection Detail Page - CANDIDATE IMPLEMENTS
+// Collection Detail Page
 // =============================================================================
 // Display a single collection with its bookmarks and settings.
 //
@@ -28,8 +28,7 @@ export default async function CollectionDetailPage({
 }: CollectionDetailPageProps) {
   const { id } = await params;
 
-  // TODO: Fetch collection with bookmarks using getEnhancedPrisma()
-  // If not found, call notFound()
+  // Fetch collection with bookmarks, return 404 if not found
   const db = await getEnhancedPrisma();
   const collection = await db.collection.findUnique({
     where: { id },
@@ -52,7 +51,6 @@ export default async function CollectionDetailPage({
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          {/* TODO: Display collection.name and collection.description */}
           <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
           {collection.description && (
             <p className="text-muted-foreground">{collection.description}</p>
@@ -75,14 +73,10 @@ export default async function CollectionDetailPage({
             <CreateBookmarkDialog collectionId={id} />
           </div>
 
-          {/* TODO: Replace with collection.bookmarks */}
           <BookmarksList bookmarks={collection.bookmarks} />
         </TabsContent>
 
         <TabsContent value="settings">
-          {/* TODO: Pass fetched collection to CollectionSettingsForm
-           * <CollectionSettingsForm collection={collection} />
-           */}
           <CollectionSettingsForm collection={collection} />
         </TabsContent>
       </Tabs>

@@ -1,5 +1,5 @@
 // =============================================================================
-// Collections Page - CANDIDATE IMPLEMENTS
+// Collections Page
 // =============================================================================
 // Display all collections owned by the current user. Allow creating new ones.
 //
@@ -21,9 +21,7 @@ export default async function CollectionsPage() {
     redirect("/");
   }
 
-  // TODO: Fetch collections with getEnhancedPrisma()
-  // Include bookmark count: include: { _count: { select: { bookmarks: true } } }
-  // Filter to only show collections owned by the current user (not shared ones)
+  // Fetch collections with bookmark count, filtered to only show owned collections
   const db = await getEnhancedPrisma();
   const collections = await db.collection.findMany({
     where: {
@@ -53,7 +51,6 @@ export default async function CollectionsPage() {
         <CreateCollectionDialog />
       </div>
 
-      {/* TODO: Replace empty array with fetched collections */}
       <CollectionsList collections={collections} />
     </div>
   );

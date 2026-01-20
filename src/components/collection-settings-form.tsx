@@ -1,14 +1,7 @@
 // =============================================================================
-// Collection Settings Form - CANDIDATE IMPLEMENTS
+// Collection Settings Form
 // =============================================================================
 // Form for editing collection settings including share mode and password.
-//
-// TODO:
-// - Add state for form fields
-// - Call updateCollection action on save
-// - Show password field only when shareMode is PASSWORD_PROTECTED
-// - Show shareable URL only when shareMode is not PRIVATE
-// - Handle loading/error states
 // =============================================================================
 
 "use client";
@@ -207,7 +200,6 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
             />
           </div>
 
-          {/* TODO: Show password field when PASSWORD_PROTECTED */}
           {shareMode === "PASSWORD_PROTECTED" && (
             <div className="space-y-2">
               <Label htmlFor="password">Share Password</Label>
@@ -233,7 +225,6 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
             </div>
           )}
 
-          {/* TODO: Show shareable URL when not PRIVATE */}
           {shareMode !== "PRIVATE" && (
             <div className="space-y-2">
               <Label>Shareable URL</Label>

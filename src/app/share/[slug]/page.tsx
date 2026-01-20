@@ -1,5 +1,5 @@
 // =============================================================================
-// Public Share Page - CANDIDATE IMPLEMENTS
+// Public Share Page
 // =============================================================================
 // Display a shared collection to visitors (logged in or not).
 //
@@ -27,8 +27,7 @@ interface SharePageProps {
 export default async function SharePage({ params }: SharePageProps) {
   const { slug } = await params;
 
-  // TODO: Fetch collection by slug with owner and bookmarks
-  // If null (PRIVATE or not found) → notFound()
+  // Fetch collection by slug, return 404 if PRIVATE or not found
   const db = await getEnhancedPrisma();
   const collection = await db.collection.findUnique({
     where: { slug },
@@ -47,9 +46,7 @@ export default async function SharePage({ params }: SharePageProps) {
     notFound();
   }
 
-  // TODO: Handle PASSWORD_PROTECTED
-  // Check cookie: (await cookies()).get(`share-verified-${slug}`)?.value === 'true'
-  // If not verified → return <PasswordGate slug={slug} collectionName={...} />
+  // Check if password-protected collection is verified via cookie
   if (collection.shareMode === "PASSWORD_PROTECTED") {
     const cookieStore = await cookies();
     const isVerified = cookieStore.get(`share-verified-${slug}`)?.value === "true";
@@ -71,7 +68,6 @@ export default async function SharePage({ params }: SharePageProps) {
       {/* Content */}
       <main className="container py-6">
         <div className="space-y-6">
-          {/* TODO: Display collection.name, collection.description, collection.owner.name */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
             {collection.description && (
@@ -82,7 +78,6 @@ export default async function SharePage({ params }: SharePageProps) {
             </p>
           </div>
 
-          {/* TODO: Replace with collection.bookmarks */}
           <BookmarksList bookmarks={collection.bookmarks} readonly />
         </div>
       </main>
