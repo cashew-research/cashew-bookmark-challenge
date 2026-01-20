@@ -32,32 +32,54 @@ interface BookmarksListProps {
 }
 
 export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProps) {
+  // Optimistic UI state - track deleted IDs to hide them immediately
+  const [optimisticallyDeletedIds, setOptimisticallyDeletedIds] = useState<Set<string>>(new Set());
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingBookmark, setEditingBookmark] = useState<BookmarkData | null>(null);
   const [bookmarkToDelete, setBookmarkToDelete] = useState<BookmarkData | null>(null);
 
+  // Filter out optimistically deleted bookmarks for immediate UI feedback
+  const visibleBookmarks = bookmarks.filter(b => !optimisticallyDeletedIds.has(b.id));
+
   const handleDelete = async () => {
     if (!bookmarkToDelete) return;
 
-    setDeletingId(bookmarkToDelete.id);
+    const deleteId = bookmarkToDelete.id;
     setBookmarkToDelete(null);
+    setDeletingId(deleteId);
+    
+    // Optimistic update: immediately hide the bookmark
+    setOptimisticallyDeletedIds(prev => new Set(prev).add(deleteId));
 
     try {
-      const result = await deleteBookmark(bookmarkToDelete.id);
+      const result = await deleteBookmark(deleteId);
 
       if (result.success) {
         toast.success("Bookmark deleted");
+        // Keep it hidden (server confirmed deletion)
       } else {
+        // Revert optimistic update on failure
+        setOptimisticallyDeletedIds(prev => {
+          const next = new Set(prev);
+          next.delete(deleteId);
+          return next;
+        });
         toast.error(result.error || "Failed to delete bookmark");
       }
     } catch {
+      // Revert optimistic update on error
+      setOptimisticallyDeletedIds(prev => {
+        const next = new Set(prev);
+        next.delete(deleteId);
+        return next;
+      });
       toast.error("An unexpected error occurred");
     } finally {
       setDeletingId(null);
     }
   };
 
-  if (bookmarks.length === 0) {
+  if (visibleBookmarks.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
         <Bookmark className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -72,7 +94,7 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
   return (
     <>
       <div className="grid gap-4">
-        {bookmarks.map((bookmark) => (
+        {visibleBookmarks.map((bookmark) => (
           <div key={bookmark.id} className="relative">
             <BookmarkCard
               bookmark={bookmark}
