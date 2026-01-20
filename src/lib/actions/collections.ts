@@ -127,7 +127,7 @@ export async function updateCollection(
       name?: string;
       description?: string | null;
       shareMode?: "PRIVATE" | "LINK_ACCESS" | "PASSWORD_PROTECTED";
-      sharePassword?: string | null;
+      sharePassword?: string;
     } = {};
 
     if (validated.name !== undefined) {
@@ -141,16 +141,17 @@ export async function updateCollection(
 
     if (validated.shareMode !== undefined) {
       updateData.shareMode = validated.shareMode;
-
-      // Clear password when changing away from PASSWORD_PROTECTED
-      if (validated.shareMode !== "PASSWORD_PROTECTED") {
-        updateData.sharePassword = null;
-      }
     }
 
-    // If sharePassword is provided, pass it as plain text (ZenStack @password will hash it)
-    if (validated.sharePassword !== undefined && validated.sharePassword !== null) {
+    // Only update password if a new one is provided (non-empty string)
+    // The password field stays in the database but is only used when shareMode is PASSWORD_PROTECTED
+    if (validated.sharePassword && validated.sharePassword.length > 0) {
       updateData.sharePassword = validated.sharePassword;
+    }
+
+    // Ensure we have something to update
+    if (Object.keys(updateData).length === 0) {
+      return { success: false, error: "No fields to update" };
     }
 
     const collection = await db.collection.update({
@@ -167,7 +168,10 @@ export async function updateCollection(
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0]?.message ?? "Validation error" };
     }
-    return { success: false, error: "Failed to update collection" };
+    // Log error for debugging (remove in production or use proper logging)
+    console.error("Update collection error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to update collection";
+    return { success: false, error: errorMessage };
   }
 }
 
