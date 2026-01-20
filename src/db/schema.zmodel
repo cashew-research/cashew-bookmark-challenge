@@ -113,6 +113,7 @@ model Bookmark {
   title         String
   url           String
   description   String?
+  tags          String     @default("[]") // JSON string array (SQLite workaround)
 
   collectionId  String
   collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
