@@ -108,7 +108,7 @@ Within each collection, users should be able to:
 ## Technical Requirements
 
 > **⚠️ Important: This project uses ZenStack v2**
-> 
+>
 > This starter is configured with **ZenStack v2.x** (not v3). Please ensure you reference the v2 documentation when implementing access policies and schema features.
 >
 > **Helpful ZenStack v2 Documentation:**
@@ -119,7 +119,7 @@ Within each collection, users should be able to:
 > - [@omit Attribute](https://zenstack.dev/docs/2.x/reference/zmodel-language#omit) (for hiding sensitive fields like passwords)
 
 > **📁 Schema File Location**
-> 
+>
 > Only modify `src/db/schema.zmodel` — this is the ZenStack schema file. **Do not edit** the generated Prisma files in `src/db/prisma/`. When you run `pnpm db:generate`, ZenStack automatically generates the Prisma schema from your `.zmodel` file.
 
 ### 1. ZenStack Schema (`src/db/schema.zmodel`)
@@ -350,13 +350,32 @@ Email your submission to **both**:
 
 ## Design Decisions (Optional)
 
-If you make any notable design decisions, document them here:
+### Security Fixes in `verifySharePassword`
 
-```
-Example:
-- Used optimistic updates for bookmarks because...
-- Implemented password verification with cookies because...
-```
+The original implementation contained **6 security vulnerabilities** that were identified and fixed:
+
+| Issue | Problem | Fix |
+|-------|---------|-----|
+| **Plain text comparison** | Used `===` instead of `bcrypt.compare()` | Use `bcrypt.compare()` for constant-time verification |
+| **Information leakage** | Different error messages revealed collection existence | Use consistent "Access denied" message for all failures |
+| **Wrong Prisma client** | Enhanced client couldn't access `@omit` fields | Use raw `prisma` client for server-side verification |
+| **Missing mode check** | No verification that collection is PASSWORD_PROTECTED | Check `shareMode === "PASSWORD_PROTECTED"` first |
+| **No session management** | Password required on every page load | Set secure `httpOnly` cookie on successful verification |
+| **Timing attack vulnerability** | No hash comparison for missing collections | Always perform hash comparison using dummy hash |
+
+### Other Design Decisions
+
+- **Tags stored as JSON string** — SQLite doesn't support arrays, so tags are stored as a JSON string (`@default("[]")`) and parsed/stringified in the server actions.
+
+- **ZenStack handles password hashing** — The `@password` attribute automatically hashes passwords with bcryptjs, so we pass plain text to the enhanced client (no manual hashing needed for storage).
+
+- **Cookie-based session verification** — Used secure `httpOnly` cookies (`share-verified-{slug}`) for password verification sessions. This approach:
+  - Keeps URLs shareable without exposing credentials
+  - Prevents XSS attacks via httpOnly flag
+  - Allows 24-hour persistence for better UX
+  - Uses `sameSite: strict` to prevent CSRF attacks
+
+- **Cascade delete via schema** — Configured `onDelete: Cascade` on the Bookmark→Collection relation so deleting a collection automatically removes all its bookmarks.
 
 ---
 
