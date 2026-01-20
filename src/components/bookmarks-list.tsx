@@ -23,6 +23,7 @@ interface BookmarkData {
   title: string;
   url: string;
   description?: string | null;
+  tags?: string | null; // JSON string array
   createdAt: Date;
 }
 

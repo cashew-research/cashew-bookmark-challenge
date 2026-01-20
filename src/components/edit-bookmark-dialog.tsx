@@ -25,8 +25,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TagInput } from "@/components/tag-input";
 import { updateBookmark } from "@/lib/actions/bookmarks";
 import { toast } from "sonner";
+
+/**
+ * Parse tags from JSON string to array
+ */
+function parseTags(tagsJson?: string | null): string[] {
+  if (!tagsJson) return [];
+  try {
+    const parsed = JSON.parse(tagsJson);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 interface EditBookmarkDialogProps {
   bookmark: {
@@ -34,6 +48,7 @@ interface EditBookmarkDialogProps {
     title: string;
     url: string;
     description?: string | null;
+    tags?: string | null;
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
@@ -48,6 +63,7 @@ export function EditBookmarkDialog({
   const [title, setTitle] = useState(bookmark.title);
   const [url, setUrl] = useState(bookmark.url);
   const [description, setDescription] = useState(bookmark.description ?? "");
+  const [tags, setTags] = useState<string[]>(parseTags(bookmark.tags));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,6 +85,7 @@ export function EditBookmarkDialog({
         title,
         url,
         description: description || undefined,
+        tags,
       });
 
       if (result.success) {
@@ -129,6 +146,16 @@ export function EditBookmarkDialog({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this bookmark about?"
               disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagInput
+              tags={tags}
+              onChange={setTags}
+              disabled={isLoading}
+              placeholder="e.g. react, tutorial, frontend"
             />
           </div>
 

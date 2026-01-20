@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TagInput } from "@/components/tag-input";
 import { createBookmark } from "@/lib/actions/bookmarks";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,6 +54,7 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
         title,
         url,
         description: description || undefined,
+        tags: tags.length > 0 ? tags : undefined,
       });
 
       if (result.success) {
@@ -61,6 +64,7 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
         setTitle("");
         setUrl("");
         setDescription("");
+        setTags([]);
       } else {
         setError(result.error || "Failed to add bookmark");
       }
@@ -118,6 +122,16 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags (optional)</Label>
+            <TagInput
+              tags={tags}
+              onChange={setTags}
+              disabled={isLoading}
+              placeholder="e.g. react, tutorial, frontend"
             />
           </div>
 

@@ -10,12 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TagBadges } from "@/components/tag-input";
 
 interface Bookmark {
   id: string;
   title: string;
   url: string;
   description?: string | null;
+  tags?: string | null; // JSON string array
   createdAt: Date;
 }
 
@@ -39,6 +41,19 @@ function getFaviconUrl(url: string): string | null {
   }
 }
 
+/**
+ * Parse tags from JSON string to array
+ */
+function parseTags(tagsJson?: string | null): string[] {
+  if (!tagsJson) return [];
+  try {
+    const parsed = JSON.parse(tagsJson);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function BookmarkCard({
   bookmark,
   readonly = false,
@@ -46,13 +61,14 @@ export function BookmarkCard({
   onDelete,
 }: BookmarkCardProps) {
   const [faviconError, setFaviconError] = useState(false);
-  
+
   // Truncate URL for display
   const displayUrl = bookmark.url.length > 50
     ? bookmark.url.substring(0, 50) + "..."
     : bookmark.url;
 
   const faviconUrl = getFaviconUrl(bookmark.url);
+  const tags = parseTags(bookmark.tags);
 
   return (
     <Card className="group transition-all duration-200 hover:shadow-md">
@@ -122,11 +138,14 @@ export function BookmarkCard({
         </div>
       </CardHeader>
 
-      {bookmark.description && (
-        <CardContent className="pt-0">
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {bookmark.description}
-          </p>
+      {(bookmark.description || tags.length > 0) && (
+        <CardContent className="pt-0 space-y-2">
+          {bookmark.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {bookmark.description}
+            </p>
+          )}
+          {tags.length > 0 && <TagBadges tags={tags} />}
         </CardContent>
       )}
     </Card>
