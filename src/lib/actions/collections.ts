@@ -20,6 +20,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getEnhancedPrisma } from "@/lib/db";
+import { prisma } from "@/db/prisma"
 import { ShareMode, Collection } from "@prisma/client";
 import { getCurrentUser } from "../auth";
 import { ActionResult } from "../types";
@@ -227,7 +228,8 @@ export async function verifySharePassword(
   slug: string,
   password: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const db = await getEnhancedPrisma();
+  const db = prisma; // MJ: Use direct Prisma client to avoid policy interference
+  
 
   // Explicitly request sharePassword due to @omit
   const collection = await db.collection.findUnique({
@@ -266,7 +268,7 @@ export async function verifySharePassword(
   if (isPasswordValid) {
     // Requirement: Password entry once per session
     const cookieStore = await cookies();
-    cookieStore.set("share-verified-${slug}", "true", {
+    cookieStore.set(`share-verified-${slug}`, "true", {
       httpOnly: true,
       sameSite: "strict",
       maxAge: 86400,
