@@ -68,7 +68,13 @@ export function CollectionCard({ collection }: CollectionCardProps) {
           )}
 
           <div className="flex items-center gap-1 text-sm text-muted-foreground pt-2">
-            <Bookmark className="h-4 w-4" />
+            <Bookmark 
+              className={`h-4 w-4 transition-colors ${
+                bookmarkCount > 1 
+                  ? 'fill-yellow-400 stroke-yellow-500' 
+                  : 'stroke-currentColor'
+              }`} 
+            />
             <span>
               {bookmarkCount} {bookmarkCount === 1 ? "bookmark" : "bookmarks"}
             </span>
