@@ -24,56 +24,66 @@ import { ShareMode, Collection } from "@prisma/client";
 import { getCurrentUser } from "../auth";
 import { ActionResult } from "../types";
 import { errorResponse, successResponse } from "../utils";
-import { error } from "console";
 import { compare } from "bcryptjs";
+import { cookies } from "next/headers";
 
 // -----------------------------------------------------------------------------
 // Validation Schemas
 // -----------------------------------------------------------------------------
+const baseCollectionSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).optional(),
+  slug: z.string().min(1).max(100).optional(),
+  shareMode: z
+    .enum(["PRIVATE", "LINK_ACCESS", "PASSWORD_PROTECTED"])
+    .optional()
+    .default("PRIVATE"),
+  // Allow empty string to be transformed to null
+  sharePassword: z
+    .string()
+    .max(100)
+    .optional()
+    .nullable()
+    .transform((value) => (value === "" ? null : value)),
+});
 
-const createCollectionSchema = z
-  .object({
-    name: z.string().min(1, "Name is required").max(100),
-    description: z.string().max(500).optional(),
-    slug: z.string().min(1).max(100).optional(),
-    shareMode: z
-      .enum(["PRIVATE", "LINK_ACCESS", "PASSWORD_PROTECTED"])
-      .optional()
-      .default("PRIVATE"),
-    // Allow empty string to be transformed to null
-    sharePassword: z
-      .string()
-      .min(4)
-      .max(100)
-      .optional()
-      .nullable()
-      .transform((value) => (value === "" ? null : value)),
-  })
+const createCollectionSchema = baseCollectionSchema.refine(
+  (data) => {
+    // If mode is PASSWORD_PROTECTED, password is REQUIRED
+    if (data.shareMode === ShareMode.PASSWORD_PROTECTED) {
+      return !!data.sharePassword && data.sharePassword.length >= 4;
+    }
+    return true;
+  },
+  {
+    message: "Password must be at least 4 characters",
+    path: ["sharePassword"], // Shows the error on the password field
+  },
+);
+
+const updateCollectionSchema = baseCollectionSchema
+  .omit({ slug: true })
+  .partial()
   .refine(
     (data) => {
-      // If mode is PASSWORD_PROTECTED, password is REQUIRED
       if (data.shareMode === ShareMode.PASSWORD_PROTECTED) {
         return !!data.sharePassword && data.sharePassword.length >= 4;
       }
       return true;
     },
     {
-      message: "Password is required when Share Mode is Password Protected",
-      path: ["sharePassword"], // Shows the error on the password field
+      message: "Password must be at least 4 characters",
+      path: ["sharePassword"],
     },
   );
 
-const updateCollectionSchema = createCollectionSchema
-  .omit({ slug: true })
-  .partial();
-
 // Infer the type from the schema
-type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
-type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;
+type CreateCollectionInput = z.input<typeof createCollectionSchema>;
+type UpdateCollectionInput = z.input<typeof updateCollectionSchema>;
 
 // Generic access denied error message
-const ACCESS_DENIED_ERROR = "Access denied. You do not have permission to perform this operation.";
-
+const ACCESS_DENIED_ERROR =
+  "Access denied. You do not have permission to perform this operation.";
 
 // -----------------------------------------------------------------------------
 // Server Actions
@@ -231,33 +241,43 @@ export async function verifySharePassword(
     // Mitigate timing attacks by adding a fake delay w/ some jitter
     // another option would be to always hash a dummy password
     // to ensure consistent timing.
-    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
+    await new Promise((resolve) =>
+      setTimeout(resolve, 100 + Math.random() * 100),
+    );
     return {
       success: false,
-      error:
-        ACCESS_DENIED_ERROR,
+      error: ACCESS_DENIED_ERROR,
     };
   }
 
   // 2. If no sharePassword is set, deny access.
   if (!collection.sharePassword) {
-    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
+    await new Promise((resolve) =>
+      setTimeout(resolve, 100 + Math.random() * 100),
+    );
     return {
       success: false,
-      error:
-        ACCESS_DENIED_ERROR,
+      error: ACCESS_DENIED_ERROR,
     };
   }
 
   // 3. Verification was broken. It was using plain equality instead of bcryptjs compare function.
   const isPasswordValid = await compare(password, collection.sharePassword);
   if (isPasswordValid) {
+    // Requirement: Password entry once per session
+    const cookieStore = await cookies();
+    cookieStore.set("share-verified-${slug}", "true", {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 86400,
+      secure: process.env.NODE_ENV === "production",
+      path: `/`,
+    });
     return { success: true };
   } else {
     return {
       success: false,
-      error:
-        ACCESS_DENIED_ERROR,
+      error: ACCESS_DENIED_ERROR,
     };
   }
 }
