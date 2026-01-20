@@ -214,14 +214,21 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter a new password"
+                placeholder="Enter a password (min. 4 characters)"
                 value={sharePassword}
                 onChange={(e) => setSharePassword(e.target.value)}
                 disabled={isUpdatingShare}
+                minLength={4}
+                maxLength={100}
+                required
               />
+              {sharePassword.length > 0 && sharePassword.length < 4 && (
+                <p className="text-xs text-destructive">
+                  Password must be at least 4 characters
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
-                Visitors will need this password to view the collection.
-                Leave blank to keep the current password.
+                Visitors will need this password to view the collection (4-100 characters).
               </p>
             </div>
           )}
@@ -251,7 +258,11 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
           <Button
             type="button"
             onClick={handleUpdateShare}
-            disabled={isUpdatingShare}
+            disabled={
+              isUpdatingShare ||
+              // Disable if PASSWORD_PROTECTED selected but password is invalid (empty or < 4 chars)
+              (shareMode === "PASSWORD_PROTECTED" && sharePassword.length < 4)
+            }
           >
             {isUpdatingShare ? "Updating..." : "Update Share Settings"}
           </Button>

@@ -122,6 +122,18 @@ export async function updateCollection(
     // Get enhanced Prisma to update collection
     const db = await getEnhancedPrisma();
 
+    // If switching to PASSWORD_PROTECTED, always require a valid password
+    if (validated.shareMode === "PASSWORD_PROTECTED") {
+      const newPasswordProvided = validated.sharePassword && validated.sharePassword.length >= 4;
+
+      if (!newPasswordProvided) {
+        return {
+          success: false,
+          error: "Password is required for password-protected collections (minimum 4 characters)"
+        };
+      }
+    }
+
     // Build the update data
     const updateData: {
       name?: string;
@@ -143,9 +155,9 @@ export async function updateCollection(
       updateData.shareMode = validated.shareMode;
     }
 
-    // Only update password if a new one is provided (non-empty string)
+    // Only update password if a new one is provided (non-empty string, min 4 chars)
     // The password field stays in the database but is only used when shareMode is PASSWORD_PROTECTED
-    if (validated.sharePassword && validated.sharePassword.length > 0) {
+    if (validated.sharePassword && validated.sharePassword.length >= 4) {
       updateData.sharePassword = validated.sharePassword;
     }
 
