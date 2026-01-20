@@ -70,6 +70,7 @@ export async function createBookmark(
   // Validate input
   const parsedData = createBookmarkSchema.safeParse(data);
   if (!parsedData.success) {
+    console.log("Validation error:",parsedData.error.flatten().fieldErrors);
     return errorResponse(
       "Validation failed",
       parsedData.error.flatten().fieldErrors,

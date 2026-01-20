@@ -3,7 +3,6 @@
 // =============================================================================
 // A dialog for adding new bookmarks to a collection. Wire up the form submission.
 //
-// TODO:
 // - Add state for form fields (or use form action)
 // - Call createBookmark action on submit with collectionId
 // - Handle loading/error states
@@ -11,6 +10,9 @@
 // =============================================================================
 
 "use client";
+
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +34,32 @@ interface CreateBookmarkDialogProps {
 }
 
 export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const result = await createBookmark({
+      collectionId,
+      title: formData.get("title") as string,
+      url: formData.get("url") as string,
+      description: (formData.get("description") as string) || undefined,
+    });
+    if(result.success){
+      toast.success("Bookmark added successfully");
+      setOpen(false);
+    }
+    else {
+      toast.error(`Failed to add bookmark: ${result.message}`);
+    }
+    setIsLoading(false);
+  }
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -47,21 +73,21 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
             Add a new bookmark to this collection.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="My Bookmark" />
+            <Input id="title" name="title" placeholder="My Bookmark" required disabled={isLoading}/>
           </div>
           <div className="space-y-2">
             <Label htmlFor="url">URL</Label>
-            <Input id="url" type="url" placeholder="https://example.com" />
+            <Input id="url" name="url" type="url" placeholder="https://example.com" required disabled={isLoading}/>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description (optional)</Label>
-            <Textarea id="description" placeholder="What's this bookmark about?" />
+            <Textarea id="description" name="description" placeholder="What's this bookmark about?" disabled={isLoading} />
           </div>
-          <Button type="submit" className="w-full">
-            Add Bookmark
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Adding..." : "Add Bookmark"}
           </Button>
         </form>
       </DialogContent>
