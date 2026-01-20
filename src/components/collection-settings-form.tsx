@@ -3,7 +3,6 @@
 // =============================================================================
 // Form for editing collection settings including share mode and password.
 //
-// TODO:
 // - Add state for form fields
 // - Call updateCollection action on save
 // - Show password field only when shareMode is PASSWORD_PROTECTED

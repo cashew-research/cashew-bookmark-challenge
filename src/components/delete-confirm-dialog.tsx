@@ -3,7 +3,6 @@
 // =============================================================================
 // A reusable confirmation dialog for destructive actions.
 //
-// TODO:
 // - Add loading state while deletion is in progress
 // - Handle errors from the onConfirm callback
 // - Close dialog after successful deletion

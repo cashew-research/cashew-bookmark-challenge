@@ -3,7 +3,6 @@
 // =============================================================================
 // Displays a list of bookmarks or an empty state.
 //
-// TODO:
 // - Wire up onEdit and onDelete callbacks to bookmark actions
 // - Handle loading states during delete
 // =============================================================================

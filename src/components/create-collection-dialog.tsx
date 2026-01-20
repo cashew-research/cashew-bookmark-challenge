@@ -3,7 +3,7 @@
 // =============================================================================
 // A dialog for creating new collections. Wire up the form submission.
 //
-// TODO:
+
 // - Add state for form fields (or use form action)
 // - Call createCollection action on submit
 // - Handle loading/error states
