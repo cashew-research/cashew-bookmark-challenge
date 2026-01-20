@@ -30,11 +30,13 @@ interface CollectionsListProps {
 export function CollectionsList({ collections }: CollectionsListProps) {
   if (collections.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <FolderOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">No collections yet</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Create your first collection to start organizing your bookmarks.
+      <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-12 text-center bg-muted/30">
+        <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <FolderOpen className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold">No collections yet</h3>
+        <p className="mt-2 text-muted-foreground max-w-sm mx-auto">
+          Create your first collection to start organizing your bookmarks. Collections help you group and share related links.
         </p>
       </div>
     );
@@ -42,8 +44,14 @@ export function CollectionsList({ collections }: CollectionsListProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {collections.map((collection) => (
-        <CollectionCard key={collection.id} collection={collection} />
+      {collections.map((collection, index) => (
+        <div
+          key={collection.id}
+          className="animate-in fade-in slide-in-from-bottom-2"
+          style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
+        >
+          <CollectionCard collection={collection} />
+        </div>
       ))}
     </div>
   );

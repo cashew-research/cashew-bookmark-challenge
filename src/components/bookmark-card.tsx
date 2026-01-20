@@ -55,7 +55,7 @@ export function BookmarkCard({
   const faviconUrl = getFaviconUrl(bookmark.url);
 
   return (
-    <Card>
+    <Card className="group transition-all duration-200 hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -67,7 +67,7 @@ export function BookmarkCard({
                   alt=""
                   width={20}
                   height={20}
-                  className="rounded"
+                  className="rounded transition-transform group-hover:scale-110"
                   onError={() => setFaviconError(true)}
                 />
               ) : (
@@ -81,10 +81,10 @@ export function BookmarkCard({
                   href={bookmark.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline inline-flex items-center gap-1"
+                  className="hover:underline inline-flex items-center gap-1 text-foreground hover:text-primary transition-colors"
                 >
                   {bookmark.title}
-                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                  <ExternalLink className="h-3 w-3 flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </a>
               </CardTitle>
               <CardDescription className="truncate">
@@ -94,12 +94,12 @@ export function BookmarkCard({
           </div>
 
           {!readonly && (onEdit || onDelete) && (
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
               {onEdit && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                   onClick={() => onEdit(bookmark)}
                 >
                   <Pencil className="h-4 w-4" />
@@ -110,7 +110,7 @@ export function BookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
                   onClick={() => onDelete(bookmark)}
                 >
                   <Trash2 className="h-4 w-4" />

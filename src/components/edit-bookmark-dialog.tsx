@@ -33,7 +33,7 @@ interface EditBookmarkDialogProps {
     id: string;
     title: string;
     url: string;
-    description: string | null;
+    description?: string | null;
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;

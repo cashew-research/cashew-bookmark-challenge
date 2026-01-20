@@ -49,10 +49,12 @@ export function CollectionCard({ collection }: CollectionCardProps) {
 
   return (
     <Link href={`/collections/${collection.id}`}>
-      <Card className="h-full transition-colors hover:bg-muted/50">
+      <Card className="group h-full transition-all duration-200 hover:bg-muted/50 hover:shadow-md hover:-translate-y-0.5">
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="line-clamp-1">{collection.name}</CardTitle>
+            <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+              {collection.name}
+            </CardTitle>
             <Badge variant={modeConfig.variant} className="flex-shrink-0">
               <ModeIcon className="mr-1 h-3 w-3" />
               {modeConfig.label}

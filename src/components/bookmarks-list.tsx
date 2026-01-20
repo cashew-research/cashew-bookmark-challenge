@@ -81,11 +81,16 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
 
   if (visibleBookmarks.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <Bookmark className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">No bookmarks yet</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Add your first bookmark to this collection.
+      <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-12 text-center bg-muted/30">
+        <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Bookmark className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold">No bookmarks yet</h3>
+        <p className="mt-2 text-muted-foreground max-w-sm mx-auto">
+          {readonly 
+            ? "This collection doesn't have any bookmarks yet."
+            : "Add your first bookmark to this collection using the button above."
+          }
         </p>
       </div>
     );
@@ -94,8 +99,12 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
   return (
     <>
       <div className="grid gap-4">
-        {visibleBookmarks.map((bookmark) => (
-          <div key={bookmark.id} className="relative">
+        {visibleBookmarks.map((bookmark, index) => (
+          <div 
+            key={bookmark.id} 
+            className="relative animate-in fade-in slide-in-from-bottom-2"
+            style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'backwards' }}
+          >
             <BookmarkCard
               bookmark={bookmark}
               readonly={readonly}
@@ -103,8 +112,11 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
               onDelete={readonly ? undefined : () => setBookmarkToDelete(bookmark)}
             />
             {deletingId === bookmark.id && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
-                <span className="text-sm text-muted-foreground">Deleting...</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  Deleting...
+                </div>
               </div>
             )}
           </div>
