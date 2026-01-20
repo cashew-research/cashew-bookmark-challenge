@@ -10,8 +10,13 @@
 
 "use client";
 
+import { useState } from "react";
 import { BookmarkCard } from "@/components/bookmark-card";
+import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { deleteBookmark } from "@/lib/actions/bookmarks";
 import { Bookmark } from "lucide-react";
+import { toast } from "sonner";
 
 interface BookmarkData {
   id: string;
@@ -27,14 +32,25 @@ interface BookmarksListProps {
 }
 
 export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProps) {
-  const handleEdit = (bookmark: BookmarkData) => {
-    // TODO: Open edit dialog or inline edit
-    console.log("Edit bookmark:", bookmark.id);
-  };
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingBookmark, setEditingBookmark] = useState<BookmarkData | null>(null);
 
-  const handleDelete = (bookmark: BookmarkData) => {
-    // TODO: Call deleteBookmark action
-    console.log("Delete bookmark:", bookmark.id);
+  const handleDelete = async (bookmark: BookmarkData) => {
+    setDeletingId(bookmark.id);
+
+    try {
+      const result = await deleteBookmark(bookmark.id);
+
+      if (result.success) {
+        toast.success("Bookmark deleted");
+      } else {
+        toast.error(result.error || "Failed to delete bookmark");
+      }
+    } catch {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (bookmarks.length === 0) {
@@ -50,16 +66,32 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
   }
 
   return (
-    <div className="grid gap-4">
-      {bookmarks.map((bookmark) => (
-        <BookmarkCard
-          key={bookmark.id}
-          bookmark={bookmark}
-          readonly={readonly}
-          onEdit={readonly ? undefined : handleEdit}
-          onDelete={readonly ? undefined : handleDelete}
+    <>
+      <div className="grid gap-4">
+        {bookmarks.map((bookmark) => (
+          <div key={bookmark.id} className="relative">
+            <BookmarkCard
+              bookmark={bookmark}
+              readonly={readonly}
+              onEdit={readonly ? undefined : () => setEditingBookmark(bookmark)}
+              onDelete={readonly ? undefined : () => handleDelete(bookmark)}
+            />
+            {deletingId === bookmark.id && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
+                <span className="text-sm text-muted-foreground">Deleting...</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Edit Dialog */}
+      {editingBookmark && (
+        <EditBookmarkDialog
+          bookmark={editingBookmark}
+          onSuccess={() => setEditingBookmark(null)}
         />
-      ))}
-    </div>
+      )}
+    </>
   );
 }
