@@ -47,7 +47,7 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
     const deleteId = bookmarkToDelete.id;
     setBookmarkToDelete(null);
     setDeletingId(deleteId);
-    
+
     // Optimistic update: immediately hide the bookmark
     setOptimisticallyDeletedIds(prev => new Set(prev).add(deleteId));
 
@@ -87,7 +87,7 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
         </div>
         <h3 className="text-xl font-semibold">No bookmarks yet</h3>
         <p className="mt-2 text-muted-foreground max-w-sm mx-auto">
-          {readonly 
+          {readonly
             ? "This collection doesn't have any bookmarks yet."
             : "Add your first bookmark to this collection using the button above."
           }
@@ -100,8 +100,8 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
     <>
       <div className="grid gap-4">
         {visibleBookmarks.map((bookmark, index) => (
-          <div 
-            key={bookmark.id} 
+          <div
+            key={bookmark.id}
             className="relative animate-in fade-in slide-in-from-bottom-2"
             style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'backwards' }}
           >
