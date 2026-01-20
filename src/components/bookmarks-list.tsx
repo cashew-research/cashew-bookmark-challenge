@@ -34,12 +34,16 @@ interface BookmarksListProps {
 export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingBookmark, setEditingBookmark] = useState<BookmarkData | null>(null);
+  const [bookmarkToDelete, setBookmarkToDelete] = useState<BookmarkData | null>(null);
 
-  const handleDelete = async (bookmark: BookmarkData) => {
-    setDeletingId(bookmark.id);
+  const handleDelete = async () => {
+    if (!bookmarkToDelete) return;
+
+    setDeletingId(bookmarkToDelete.id);
+    setBookmarkToDelete(null);
 
     try {
-      const result = await deleteBookmark(bookmark.id);
+      const result = await deleteBookmark(bookmarkToDelete.id);
 
       if (result.success) {
         toast.success("Bookmark deleted");
@@ -74,7 +78,7 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
               bookmark={bookmark}
               readonly={readonly}
               onEdit={readonly ? undefined : () => setEditingBookmark(bookmark)}
-              onDelete={readonly ? undefined : () => handleDelete(bookmark)}
+              onDelete={readonly ? undefined : () => setBookmarkToDelete(bookmark)}
             />
             {deletingId === bookmark.id && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
@@ -90,6 +94,17 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
         <EditBookmarkDialog
           bookmark={editingBookmark}
           onSuccess={() => setEditingBookmark(null)}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {bookmarkToDelete && (
+        <DeleteConfirmDialog
+          title="Delete Bookmark"
+          description={`Are you sure you want to delete "${bookmarkToDelete.title}"? This action cannot be undone.`}
+          onConfirm={handleDelete}
+          onCancel={() => setBookmarkToDelete(null)}
+          open={true}
         />
       )}
     </>

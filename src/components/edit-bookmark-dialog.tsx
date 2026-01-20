@@ -26,7 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateBookmark } from "@/lib/actions/bookmarks";
-import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 interface EditBookmarkDialogProps {
@@ -45,12 +44,20 @@ export function EditBookmarkDialog({
   trigger,
   onSuccess,
 }: EditBookmarkDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true); // Start open when rendered
   const [title, setTitle] = useState(bookmark.title);
   const [url, setUrl] = useState(bookmark.url);
   const [description, setDescription] = useState(bookmark.description ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Handle close - call onSuccess to unmount this component
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      onSuccess?.();
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,15 +86,12 @@ export function EditBookmarkDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button variant="outline" size="sm">
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Bookmark</DialogTitle>
