@@ -66,21 +66,8 @@ export function getEnhancedClient(userId: string | null) {
  */
 export async function resetDatabase() {
   // Delete all data in FK-safe order (children before parents)
-  // Note: Models may not exist yet in incomplete implementation
-  try {
-    // @ts-expect-error - Bookmark model may not exist yet
-    await rawPrisma.bookmark?.deleteMany({});
-  } catch {
-    // Model doesn't exist yet
-  }
-
-  try {
-    // @ts-expect-error - Collection model may not exist yet
-    await rawPrisma.collection?.deleteMany({});
-  } catch {
-    // Model doesn't exist yet
-  }
-
+  await rawPrisma.bookmark.deleteMany({});
+  await rawPrisma.collection.deleteMany({});
   await rawPrisma.user.deleteMany({});
 
   // Re-create seed users
@@ -135,27 +122,17 @@ export async function createTestUsers() {
 export async function cleanupTestData() {
   const testUserIds = [TEST_USERS.owner.id, TEST_USERS.other.id];
 
-  try {
-    // @ts-expect-error - Bookmark model may not exist yet
-    await rawPrisma.bookmark?.deleteMany({
-      where: {
-        collection: {
-          ownerId: { in: testUserIds },
-        },
+  await rawPrisma.bookmark.deleteMany({
+    where: {
+      collection: {
+        ownerId: { in: testUserIds },
       },
-    });
-  } catch {
-    // Model doesn't exist yet
-  }
+    },
+  });
 
-  try {
-    // @ts-expect-error - Collection model may not exist yet
-    await rawPrisma.collection?.deleteMany({
-      where: { ownerId: { in: testUserIds } },
-    });
-  } catch {
-    // Model doesn't exist yet
-  }
+  await rawPrisma.collection.deleteMany({
+    where: { ownerId: { in: testUserIds } },
+  });
 
   await rawPrisma.user.deleteMany({
     where: { id: { in: testUserIds } },
