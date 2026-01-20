@@ -11,12 +11,24 @@
 import { CollectionsList } from "@/components/collections-list";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
 import { getEnhancedPrisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function CollectionsPage() {
+  // Get current user to filter owned collections only
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/");
+  }
+
   // TODO: Fetch collections with getEnhancedPrisma()
   // Include bookmark count: include: { _count: { select: { bookmarks: true } } }
+  // Filter to only show collections owned by the current user (not shared ones)
   const db = await getEnhancedPrisma();
   const collections = await db.collection.findMany({
+    where: {
+      ownerId: user.id,
+    },
     include: {
       _count: {
         select: { bookmarks: true },
