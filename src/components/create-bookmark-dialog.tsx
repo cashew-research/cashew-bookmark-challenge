@@ -30,6 +30,19 @@ import { createBookmark } from "@/lib/actions/bookmarks";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
+/**
+ * Validate if a string is a valid URL
+ */
+function isValidUrl(url: string): boolean {
+  if (!url.trim()) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface CreateBookmarkDialogProps {
   collectionId: string;
 }
@@ -139,7 +152,11 @@ export function CreateBookmarkDialog({ collectionId }: CreateBookmarkDialogProps
             <p className="text-sm text-destructive">{error}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={isLoading || !title.trim() || !url.trim()}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !title.trim() || !isValidUrl(url)}
+          >
             {isLoading ? "Adding..." : "Add Bookmark"}
           </Button>
         </form>

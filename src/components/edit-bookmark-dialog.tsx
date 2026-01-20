@@ -42,6 +42,19 @@ function parseTags(tagsJson?: string | null): string[] {
   }
 }
 
+/**
+ * Validate if a string is a valid URL
+ */
+function isValidUrl(url: string): boolean {
+  if (!url.trim()) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface EditBookmarkDialogProps {
   bookmark: {
     id: string;
@@ -163,7 +176,11 @@ export function EditBookmarkDialog({
             <p className="text-sm text-destructive">{error}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={isLoading || !title.trim() || !url.trim()}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !title.trim() || !isValidUrl(url)}
+          >
             {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </form>
