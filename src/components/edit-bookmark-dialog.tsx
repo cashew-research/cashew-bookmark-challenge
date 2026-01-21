@@ -67,7 +67,7 @@ export function EditBookmarkDialog({
     if (result.success) {
       onOpenChange?.(false); 
     } else {
-      setError(result.error);
+      setError(JSON.parse(result.error)[0]?.message || "Something went wrong");
     }
     setIsPending(false);
   }

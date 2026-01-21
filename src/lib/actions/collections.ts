@@ -126,7 +126,7 @@ export async function updateCollection(
       where: { id },
       data: updateData,
     });
-    
+
     revalidatePath("/collections");
     revalidatePath(`/collections/${id}`);
     
@@ -182,7 +182,7 @@ export async function verifySharePassword(
     select: { sharePassword: true, shareMode: true },
   });
 
-  if (!collection || !collection.sharePassword) {
+  if (!collection || !collection.sharePassword || collection.shareMode == "PRIVATE") {
     return {
       success: false,
       error: "Collection not found or password is incorrect",

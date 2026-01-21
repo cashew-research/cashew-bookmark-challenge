@@ -78,7 +78,7 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
     });
 
     if (!result.success) {
-      setBasicInfoError(result.error)
+      setBasicInfoError(JSON.parse(result.error)[0]?.message || "Something went wrong")
     }
 
     setIsUpdatingBasicInfo(false);
@@ -98,7 +98,7 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
     });
 
     if (!result.success) {
-      setAccessError(result.error)
+      setAccessError(JSON.parse(result.error)[0]?.message || "Something went wrong")
     }
 
     setIsUpdatingAccess(false)
@@ -111,7 +111,7 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
     const result = await deleteCollection(collection.id);
 
     if (!result.success) {
-      setDeleteError(result.error)
+      setDeleteError(JSON.parse(result.error)[0]?.message || "Something went wrong")
     }
     setIsDeleting(false);
   }

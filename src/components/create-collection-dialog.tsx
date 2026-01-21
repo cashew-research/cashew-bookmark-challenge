@@ -44,7 +44,7 @@ export function CreateCollectionDialog() {
     if (result.success) {
       setOpen(false); 
     } else {
-      setError(result.error);
+      setError(JSON.parse(result.error)[0]?.message || "Something went wrong");
     }
     setIsPending(false);
   }
