@@ -22,6 +22,7 @@ import { z } from "zod";
 import { getEnhancedPrisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/db/prisma";
+import { cookies } from "next/headers";
 
 
 type ActionResult<T = any> =
@@ -185,14 +186,33 @@ export async function verifySharePassword(
     select: { sharePassword: true, shareMode: true },
   });
 
+  if (!collection || !collection.sharePassword) {
+    return {
+      success: false,
+      error: "Collection not found or password is incorrect",
+    };
+  }
+
   const isValid = await bcrypt.compare(
     password,
-    collection?.sharePassword
+    collection.sharePassword
   );
 
-  if (!collection || !isValid) {
-    return {success: false, error: "Collection not found or password is incorrect"}
+  if (!isValid) {
+    return {
+      success: false,
+      error: "Collection not found or password is incorrect",
+    };
   }
+
+  (await cookies()).set({
+    name: `share-verified-${slug}`,
+    value: "true",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: `/share/${slug}`,
+    maxAge: 60 * 60,
+  });
 
   return { success: true };
 }

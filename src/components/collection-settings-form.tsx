@@ -46,6 +46,7 @@ interface CollectionSettingsFormProps {
 
 export function CollectionSettingsForm({ collection }: CollectionSettingsFormProps) {
   const [shareMode, setShareMode] = useState<ShareMode>(collection.shareMode);
+  const [copied, setCopied] = useState(false);
   
   const [basicInfoError, setBasicInfoError] = useState<string | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -54,6 +55,13 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
   const [isUpdatingBasicInfo, setIsUpdatingBasicInfo] = useState(false);
   const [isUpdatingAccess, setIsUpdatingAccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+
+    setTimeout(() => setCopied(false), 400);
+  };
 
   async function handleUpdateBasicInfo(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -173,8 +181,17 @@ export function CollectionSettingsForm({ collection }: CollectionSettingsFormPro
                 <Label>Shareable URL</Label>
                 <div className="flex gap-2">
                   <Input value={shareUrl} readOnly />
-                  <Button type="button" variant="outline" size="icon">
-                    <Copy className="h-4 w-4" />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleCopy()}
+                  >
+                   <Copy
+                    className={`h-4 w-4 ${
+                      copied ? "text-green-500" : "text-gray-700"
+                    }`}
+                  />
                   </Button>
                 </div>
               </div>
