@@ -71,7 +71,7 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
           readonly={readonly}
           onEdit={readonly ? undefined : handleEdit}
           onDelete={readonly ? undefined : handleDelete}
-          isDeleting={isDeleting}
+          isDeleting={isDeleting == bookmark.id}
         />
       ))}
     

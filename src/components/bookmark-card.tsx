@@ -21,7 +21,7 @@ interface Bookmark {
 interface BookmarkCardProps {
   bookmark: Bookmark;
   readonly?: boolean;
-  isDeleting: string | null,
+  isDeleting: boolean,
   onEdit?: (bookmark: Bookmark) => void;
   onDelete?: (bookmark: Bookmark) => void;
 }
