@@ -38,9 +38,8 @@ export default async function SharePage({ params }: SharePageProps) {
       bookmarks: true
     }
   });
-  console.log(collection)
 
-  if (!collection) {
+  if (!collection || collection.shareMode == "PRIVATE") {
     notFound();
   }
 

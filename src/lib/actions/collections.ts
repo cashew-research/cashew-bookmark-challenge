@@ -109,28 +109,24 @@ export async function updateCollection(
   try {
     const parsed = updateCollectionSchema.parse(data);
     const db = await getEnhancedPrisma();
-    const updateData = { ...parsed };
+    const updateData: Omit<typeof parsed, 'sharePassword'> & { sharePassword?: string | null } = { ...parsed };
 
-    if (parsed.sharePassword) {
+    if (parsed.shareMode === "PASSWORD_PROTECTED") {
+      if (!parsed.sharePassword) {
+        return { success: false, error: "Please provide a password" };
+      }
+
       const salt = await bcrypt.genSalt(10);
       updateData.sharePassword = await bcrypt.hash(parsed.sharePassword, salt);
-    } else if (parsed.shareMode == "PASSWORD_PROTECTED") {
-      return {success: false, error: "Please provide password with length between 4 and 100"}
+    } else {
+      updateData.sharePassword = null
     }
 
     const updatedCollection = await db.collection.update({
       where: { id },
       data: updateData,
     });
-
-    const collection = await db.collection.findUnique({
-      where: { id },
-      select: { sharePassword: true, shareMode: true },
-    });
-
-    console.log(collection)
-
-
+    
     revalidatePath("/collections");
     revalidatePath(`/collections/${id}`);
     
