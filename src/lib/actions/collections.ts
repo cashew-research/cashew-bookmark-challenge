@@ -205,7 +205,6 @@ export async function verifySharePassword(
     name: `share-verified-${slug}`,
     value: "true",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     path: `/share/${slug}`,
     maxAge: 60 * 60,
   });
