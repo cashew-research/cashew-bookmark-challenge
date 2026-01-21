@@ -30,15 +30,33 @@ export default async function CollectionDetailPage({
 
   // TODO: Fetch collection with bookmarks using getEnhancedPrisma()
   // If not found, call notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  const db = await getEnhancedPrisma();
+
+  const collection = await db.collection.findUnique({
+    where: { 
+      id
+    },
+    include: {
+      bookmarks: true
+    },
+  });
+
+  if (!collection) {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          {/* TODO: Display collection.name and collection.description */}
-          <h1 className="text-3xl font-bold tracking-tight">Collection Detail</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {collection.name}
+          </h1>
+          
+          {collection.description && (
+            <p className="text-muted-foreground">{collection.description}</p>
+          )}
           <p className="text-muted-foreground">Collection ID: {id}</p>
         </div>
 
@@ -59,7 +77,7 @@ export default async function CollectionDetailPage({
           </div>
 
           {/* TODO: Replace with collection.bookmarks */}
-          <BookmarksList bookmarks={bookmarks} />
+          <BookmarksList bookmarks={collection.bookmarks} />
         </TabsContent>
 
         <TabsContent value="settings">
@@ -68,7 +86,7 @@ export default async function CollectionDetailPage({
            */}
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="text-muted-foreground">
-              Pass the fetched collection to CollectionSettingsForm.
+              <CollectionSettingsForm collection={collection} />
             </p>
           </div>
         </TabsContent>

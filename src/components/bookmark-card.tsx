@@ -21,6 +21,7 @@ interface Bookmark {
 interface BookmarkCardProps {
   bookmark: Bookmark;
   readonly?: boolean;
+  isDeleting: boolean,
   onEdit?: (bookmark: Bookmark) => void;
   onDelete?: (bookmark: Bookmark) => void;
 }
@@ -28,6 +29,7 @@ interface BookmarkCardProps {
 export function BookmarkCard({
   bookmark,
   readonly = false,
+  isDeleting,
   onEdit,
   onDelete,
 }: BookmarkCardProps) {
@@ -76,9 +78,10 @@ export function BookmarkCard({
                   size="icon"
                   className="h-8 w-8 text-destructive hover:text-destructive"
                   onClick={() => onDelete(bookmark)}
+                  disabled={isDeleting ? true : false}
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
+                  <span className="sr-only">{isDeleting ? "Deleting..." : "Delete"}</span>
                 </Button>
               )}
             </div>

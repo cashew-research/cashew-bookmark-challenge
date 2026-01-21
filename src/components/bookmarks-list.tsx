@@ -11,7 +11,10 @@
 "use client";
 
 import { BookmarkCard } from "@/components/bookmark-card";
+import { deleteBookmark } from "@/lib/actions/bookmarks";
 import { Bookmark } from "lucide-react";
+import { useState } from "react";
+import { EditBookmarkDialog } from "./edit-bookmark-dialog";
 
 interface BookmarkData {
   id: string;
@@ -27,13 +30,23 @@ interface BookmarksListProps {
 }
 
 export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProps) {
+
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [editingBookmark, setEditingBookmark] = useState<BookmarkData | null>(null);
+
   const handleEdit = (bookmark: BookmarkData) => {
     // TODO: Open edit dialog or inline edit
+    setEditingBookmark(bookmark)
     console.log("Edit bookmark:", bookmark.id);
   };
 
-  const handleDelete = (bookmark: BookmarkData) => {
+  const handleDelete = async (bookmark: BookmarkData) => {
     // TODO: Call deleteBookmark action
+    if (isDeleting === bookmark.id) return;
+
+    setIsDeleting(bookmark.id);
+    await deleteBookmark(bookmark.id);
+    setIsDeleting(null);
     console.log("Delete bookmark:", bookmark.id);
   };
 
@@ -58,8 +71,19 @@ export function BookmarksList({ bookmarks, readonly = false }: BookmarksListProp
           readonly={readonly}
           onEdit={readonly ? undefined : handleEdit}
           onDelete={readonly ? undefined : handleDelete}
+          isDeleting={isDeleting == bookmark.id}
         />
       ))}
+    
+      {editingBookmark && (
+        <EditBookmarkDialog
+          bookmark={editingBookmark}
+          onOpenChange={(open) => {
+            if (!open) setEditingBookmark(null);
+          }}
+        />
+      )}
+    
     </div>
   );
 }

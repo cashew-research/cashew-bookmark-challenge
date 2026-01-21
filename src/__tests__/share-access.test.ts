@@ -103,7 +103,27 @@ describe("Collection Share Access", () => {
       expect(result?.shareMode).toBe("LINK_ACCESS");
     });
 
-    it.todo("owner can access their PASSWORD_PROTECTED collection");
+    it("owner can access their PASSWORD_PROTECTED collection", async () => {
+      const { owner } = await createTestUsers();
+
+
+      const collection = await rawPrisma.collection.create({
+        data: {
+          name: "Protected Collection",
+          ownerId: owner.id,
+          shareMode: "PASSWORD_PROTECTED",
+        },
+      });
+
+      const ownerClient = getEnhancedClient(owner.id);
+      const result = await ownerClient.collection.findUnique({
+        where: { id: collection.id },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe("Protected Collection");
+      expect(result?.shareMode).toBe("PASSWORD_PROTECTED");
+    });
   });
 
   describe("PRIVATE Collections", () => {
@@ -222,9 +242,40 @@ describe("Collection Share Access", () => {
       ).rejects.toThrow();
     });
 
-    it.todo("LINK_ACCESS collection cannot be deleted by other users");
+    it("LINK_ACCESS collection cannot be deleted by other users", async () => {
+      const { owner, other } = await createTestUsers();
+
+      const collection = await rawPrisma.collection.create({
+        data: {
+          name: "Read Only Delete Test",
+          ownerId: owner.id,
+          shareMode: "LINK_ACCESS",
+        },
+      });
+
+      const otherClient = getEnhancedClient(other.id);
+
+      await expect(
+        otherClient.collection.delete({
+          where: { id: collection.id },
+        })
+      ).rejects.toThrow();
+
+
+      const ownerClient = getEnhancedClient(owner.id);
+      const result = await ownerClient.collection.findUnique({
+        where: { id: collection.id },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe("Read Only Delete Test");
+    });
   });
 
+  // Current Workflow is that when accessing of password protected share page,
+  // user is directed to password page, where password is requested and a cookie is added for that particular slug 
+  // There is no password validation when fetching collections and bookmark
+  // The test cases here do not make sense for the workflow 
   describe("PASSWORD_PROTECTED Collections", () => {
     it.todo("PASSWORD_PROTECTED collection is visible but content is gated");
     it.todo("correct password grants access to content");
@@ -323,6 +374,86 @@ describe("Collection Share Access", () => {
       ).rejects.toThrow();
     });
 
-    it.todo("only collection owner can delete bookmarks");
+    it("only collection owner can delete bookmarks", async () => {
+      const { owner, other } = await createTestUsers();
+
+      const collection = await rawPrisma.collection.create({
+        data: {
+          name: "Deletable Bookmarks",
+          ownerId: owner.id,
+          shareMode: "LINK_ACCESS",
+        },
+      });
+
+      const bookmark = await rawPrisma.bookmark.create({
+        data: {
+          title: "Important Link",
+          url: "https://example.com",
+          collectionId: collection.id,
+        },
+      });
+
+      const otherClient = getEnhancedClient(other.id);
+      await expect(
+        otherClient.bookmark.delete({
+          where: { id: bookmark.id },
+        })
+      ).rejects.toThrow();
+
+      const ownerClient = getEnhancedClient(owner.id);
+      await ownerClient.bookmark.delete({
+        where: { id: bookmark.id },
+      });
+
+      const check = await ownerClient.bookmark.findUnique({
+        where: { id: bookmark.id },
+      });
+      expect(check).toBeNull();
+    });
+
+  });
+});
+
+describe("Cascade deletion of bookmarks", () => {
+  it("deletes all bookmarks when a collection is deleted", async () => {
+    const { owner } = await createTestUsers();
+
+    const collection = await rawPrisma.collection.create({
+      data: {
+        name: "Collection to Delete",
+        ownerId: owner.id,
+        shareMode: "LINK_ACCESS",
+      },
+    });
+
+    await rawPrisma.bookmark.create({
+      data: {
+        title: "Bookmark 1",
+        url: "https://example1.com",
+        collectionId: collection.id,
+      },
+    });
+
+    await rawPrisma.bookmark.create({
+      data: {
+        title: "Bookmark 2",
+        url: "https://example2.com",
+        collectionId: collection.id,
+      },
+    });
+
+    const existingBookmarks = await rawPrisma.bookmark.findMany({
+      where: { collectionId: collection.id },
+    });
+    expect(existingBookmarks).toHaveLength(2);
+
+    await rawPrisma.collection.delete({
+      where: { id: collection.id },
+    });
+
+    const remainingBookmarks = await rawPrisma.bookmark.findMany({
+      where: { collectionId: collection.id },
+    });
+    expect(remainingBookmarks).toHaveLength(0);
   });
 });
