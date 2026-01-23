@@ -31,39 +31,35 @@ export function BookmarkCard({
   onEdit,
   onDelete,
 }: BookmarkCardProps) {
-  // Truncate URL for display
-  const displayUrl = bookmark.url.length > 50
-    ? bookmark.url.substring(0, 50) + "..."
-    : bookmark.url;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-4"> {/* MJ: Increased gap */}
           <div className="space-y-1 min-w-0 flex-1">
-            <CardTitle className="text-base">
+            <CardTitle className="text-base leading-tight">
               <a
                 href={bookmark.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline inline-flex items-center gap-1"
+                className="hover:underline block group"
               >
-                {bookmark.title}
-                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                <span>{bookmark.title}</span>
+                <ExternalLink className="inline-block h-3 w-3 ml-1 mb-0.5 text-muted-foreground" />
               </a>
             </CardTitle>
-            <CardDescription className="truncate">
-              {displayUrl}
+            <CardDescription className="truncate text-xs"> {/* Use CSS truncation instead of JS */}
+              {bookmark.url}
             </CardDescription>
           </div>
 
           {!readonly && (onEdit || onDelete) && (
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0 -mr-2"> {/* MJ: Added -mr-2 to align buttons better */ }
               {onEdit && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9" /* MJ: Increased button size for better touch targets */ 
                   onClick={() => onEdit(bookmark)}
                 >
                   <Pencil className="h-4 w-4" />

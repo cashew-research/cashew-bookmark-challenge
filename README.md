@@ -350,7 +350,34 @@ Email your submission to **both**:
 
 ## Design Decisions (Optional)
 
-If you make any notable design decisions, document them here:
+Hybrid Controlled Dialogs - implemented a parent owned state pattern for
+DeleteConfirmDialog and EditBookmarkDialog. Lifted the state to BookmarksList
+to avoid rendering unnecessary dialogs in the DOM.
+
+Async action handling - Replaced AlertDialog actions with custom Button
+components to prevent the dialog from auto closing during requests. Allows
+for a retry state if a server action fails which improves UX.
+
+Type safe server responses via discriminating unions - I implemented a 
+discriminating union pattern for all action results (ActionResult). Instead of
+relying on try/catch which can result in untyped error states, this pattern
+utilizes a literal success property to act as a type guard. This gives us compile time
+safety, standardized form validation and allows Zod validation errors from the server to be mapped
+directly to specific UI inputs with full auto complete support. It eliminates impossible
+states as the component is forced to explicitly handle both the success and the failure
+branches leading to a robust experience.
+
+Schema-Driven type inference w/ Zod - To maintain a single source of truth for data
+validation, I utilized Zod's z.input / z.infer utilities to drive the typescript
+interfaces for my server actions. Key benefits: DRY, clarity and seamless integration
+with server actions.  By typing the action arguments with the schema's input type,
+the boundary between the form UI and the database remains enforced. If a field name
+changes in the database, TS will automatically flag an error in the UI components preventing
+runtime failures.
+
+
+
+
 
 ```
 Example:

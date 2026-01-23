@@ -30,8 +30,8 @@ model User {
   name      String
   createdAt DateTime @default(now())
 
-  // TODO: Add relation to collections once you create the Collection model
-  // collections Collection[]
+  // User has zero or more collections
+  collections Collection[]
 
   // Access policy: Users are readable by anyone (for displaying owner info)
   @@allow('read', true)
@@ -67,12 +67,39 @@ enum ShareMode {
 // - read: Owner can always read, others can read if shareMode != PRIVATE
 // - update/delete: Only owner can modify
 //
-// model Collection {
-//   // Your implementation here
-// }
+model Collection {
+  id String @id @default(cuid())
+  name String
+  description String?
+  slug String @unique @default(cuid())
+  shareMode ShareMode @default(PRIVATE)
+  
+  // @password is necessary for ensuring the string is hashed correctly, ZenStack uses bcryptjs under the hood.
+  sharePassword String? @password @omit
+
+  // The owner of the collection, references User.id
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id])
+
+  // Collection has 0 or more bookmarks
+  bookmarks Bookmark[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // acls per the policies above. The read policy here is critical to enforcing Share Controls
+  // `When a collection is changed to PRIVATE, all users except the owner immediately lose access`
+  // The Policy Check for shareMode != PRIVATE is continuously evaluated at runtime.
+  // Bookmark inherits from it's collections rules so everything applies simulatenously to Bookmarks
+  
+  @@allow('create', auth() != null)
+  @@allow('read', auth() == owner || shareMode != PRIVATE)
+  @@allow('update,delete', auth() == owner)
+  
+}
 
 // =============================================================================
-// TODO: Implement Bookmark Model
+// Implement Bookmark Model
 // =============================================================================
 // Requirements:
 // - id: String primary key with cuid() default
@@ -90,6 +117,39 @@ enum ShareMode {
 //   - read: Same as collection read policy
 //   - update/delete: Only collection owner can modify
 //
-// model Bookmark {
-//   // Your implementation here
-// }
+model Bookmark {
+
+  id String @id @default(cuid())
+  title String
+  url String
+  description String?
+  tags Tag[]
+
+  collectionId String
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // acls per policies above, inheriting from the parent collection
+  // Check if the user has update rights on the parent.
+  @@allow('create,update,delete', check(collection,'update'))
+  // Check if the user has read rights on the parent
+  @@allow('read',check(collection,'read'))
+  
+}
+
+// Tag model implementation
+model Tag {
+  id String @id @default(cuid())
+  name String
+  
+  // Tag is owned by bookmark
+  bookmarkId String
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  
+  // acl's - if you can update a bookmark you can add / remove a tag
+  @@allow('create,update,delete',check(bookmark,'update'))
+  @@allow('read', check(bookmark,'read'))
+
+}

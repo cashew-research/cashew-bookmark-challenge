@@ -27,33 +27,72 @@ interface SharePageProps {
 export default async function SharePage({ params }: SharePageProps) {
   const { slug } = await params;
 
-  // TODO: Fetch collection by slug with owner and bookmarks
-  // If null (PRIVATE or not found) → notFound()
-  const bookmarks: never[] = []; // Replace with collection.bookmarks
+  const db = await getEnhancedPrisma();
+  // Fetch collection by slug, returns NULL if user is not allowed to see it
+  const collection = await db.collection.findUnique({
+    where: { slug },
+    include: {
+      bookmarks: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          tags: true,
+        },
+      },
+      owner: {
+        select: { name: true },
+      },
+    },
+  });
 
-  // TODO: Handle PASSWORD_PROTECTED
+  if (!collection) {
+    return notFound();
+  }
+
+  const bookmarks = collection?.bookmarks || [];
+
   // Check cookie: (await cookies()).get(`share-verified-${slug}`)?.value === 'true'
   // If not verified → return <PasswordGate slug={slug} collectionName={...} />
+  // 3. Handle Password Protection
+  if (collection.shareMode === "PASSWORD_PROTECTED") {
+    const cookieStore = await cookies();
+    const verifiedCookie = cookieStore.get(`share-verified-${slug}`);
+    
+    // If cookie is missing or not "true", stop here and show the Gate
+    if (verifiedCookie?.value !== "true") {
+      return <PasswordGate slug={slug} collectionName={collection.name} />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b">
-        <div className="container flex h-14 items-center">
-          <span className="font-semibold">Shared Collection</span>
+        <div className="container flex h-14 items-center justify-between">
+          <div className="flex items-center gap-2 font-semibold">
+             <span>Shared Collection</span>
+             <span className="text-muted-foreground">/</span>
+             <span>{collection.owner.name}</span>
+          </div>
         </div>
       </header>
 
       {/* Content */}
       <main className="container py-6">
         <div className="space-y-6">
-          {/* TODO: Display collection.name, collection.description, collection.owner.name */}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Share Page</h1>
-            <p className="text-muted-foreground">Slug: {slug}</p>
+          {/* Collection Header */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {collection.name}
+            </h1>
+            {collection.description && (
+              <p className="text-lg text-muted-foreground">
+                {collection.description}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Shared by {collection.owner.name}
+            </p>
           </div>
-
-          {/* TODO: Replace with collection.bookmarks */}
           <BookmarksList bookmarks={bookmarks} readonly />
         </div>
       </main>
